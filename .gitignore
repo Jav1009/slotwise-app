@@ -1,0 +1,120 @@
+# .gitignore for SlotWise Backend (Node.js)
+
+# ============================================
+# ENVIRONMENT VARIABLES (CRITICAL - NEVER COMMIT)
+# ============================================
+.env
+.env.local
+.env.production
+.env.development
+
+# ============================================
+# FIREBASE CREDENTIALS (CRITICAL - NEVER COMMIT)
+# ============================================
+# Firebase Admin SDK service account JSON
+*firebase*.json
+*serviceAccountKey*.json
+firebase-adminsdk-*.json
+
+# ============================================
+# NODE.JS
+# ============================================
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ============================================
+# LOGS
+# ============================================
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ============================================
+# OPERATING SYSTEM
+# ============================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# ============================================
+# IDE / EDITOR
+# ============================================
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# JetBrains (WebStorm, IntelliJ)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# ============================================
+# BUILD / DIST
+# ============================================
+dist/
+build/
+out/
+
+# ============================================
+# TESTING
+# ============================================
+coverage/
+.nyc_output/
+*.lcov
+
+# ============================================
+# TEMPORARY FILES
+# ============================================
+tmp/
+temp/
+*.tmp
+
+# ============================================
+# UPLOADS (if using file uploads)
+# ============================================
+uploads/
+public/uploads/
+
+# ============================================
+# DATABASE BACKUPS
+# ============================================
+*.sql
+*.dump
+backups/
+
+# ============================================
+# DOCUMENTATION (Generated)
+# ============================================
+docs/api/
+
+# ============================================
+# MISC
+# ============================================
+.cache/
+.parcel-cache/
