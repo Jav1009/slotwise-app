@@ -1,0 +1,334 @@
+
+[2026-03-05] Initial log created. 
+Detected middleware naming issues causing TypeError in authRoutes.js and notificationRoutes.js when importing authMiddleware.
+- authMiddleware exported only as authMiddleware; routes expected `protect` or `auth` which were undefined.
+- Also route order incorrect on logout (middleware after handler).
+Applied fixes: export alias `protect`, corrected route imports, reordered logout route.
+Added file logging in errorMiddleware to append every error to this file for future debugging.
+[2026-03-05] Additional route fixes:
+- serviceRoutes.js, bookingRoutes.js, slotRoutes.js were importing middleware incorrectly.
+  * `require('../middlewares/authMiddleware')` returned module object instead of function.
+  * adminMiddleware was required without destructuring causing object middleware error.
+  Updated to use `{ protect }` and `{ adminOnly }` and replaced `auth` references with `protect`.
+
+[2026-03-05] Completed verification of all route files, controllers and middleware for similar issues.
+- No further misnamed imports or invalid handler references detected.
+- Controllers do not import middleware directly; middlewares only export properly named functions.
+
+[2026-03-05T06:59:43.135Z] POST /api/auth/register --> All fields are required: firstName, lastName, email, password
+   Stack: Error: All fields are required: firstName, lastName, email, password
+    at exports.register (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\authController.js:89:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-05T07:00:23.894Z] POST /api/auth/register --> You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '?, 'user')' at line 2
+   Stack: Error: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '?, 'user')' at line 2
+    at PromisePool.query (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at exports.register (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\authController.js:122:37)
+
+[2026-03-05T07:02:22.054Z] POST /api/auth/register --> Field 'uid' doesn't have a default value
+   Stack: Error: Field 'uid' doesn't have a default value
+    at PromisePool.query (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at exports.register (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\authController.js:122:37)
+
+[2026-03-05T07:06:20.505Z] POST /api/auth/login --> Invalid email or password
+   Stack: Error: Invalid email or password
+    at exports.login (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\authController.js:233:19)
+
+[2026-03-05T15:33:11.934Z] GET / --> Route not found: GET /
+   Stack: AppError: Route not found: GET /
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at cors (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:188:7)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:224:17
+    at originCallback (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:214:15)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:219:13
+
+[2026-03-05T15:33:12.265Z] GET /favicon.ico --> Route not found: GET /favicon.ico
+   Stack: AppError: Route not found: GET /favicon.ico
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at cors (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:188:7)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:224:17
+    at originCallback (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:214:15)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:219:13
+
+[2026-03-05T15:35:35.044Z] GET / --> Route not found: GET /
+   Stack: AppError: Route not found: GET /
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at cors (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:188:7)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:224:17
+    at originCallback (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:214:15)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:219:13
+
+[2026-03-05T15:35:39.897Z] GET / --> Route not found: GET /
+   Stack: AppError: Route not found: GET /
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at cors (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:188:7)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:224:17
+    at originCallback (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:214:15)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:219:13
+
+[2026-03-05T15:36:31.152Z] POST /auth/login --> Route not found: POST /auth/login
+   Stack: AppError: Route not found: POST /auth/login
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+
+[2026-03-05] BOOKING CREATE BUG FIXED:
+ERROR: ReferenceError: userId is not defined
+   File: controllers/bookingController.js:58
+   Issue: notifyBookingConfirmed() was called with undefined variables (userId, booking_Id, serviceName, bookingDate)
+   Root Cause: Variables were not defined in the function scope. Service name and booking date were never fetched from database.
+   
+CHANGES MADE:
+   1. Fixed variable names: 
+      - userId → user_id (the actual variable from req.user.id)
+      - booking_Id → result.insertId (the booking ID from INSERT query)
+   2. Added queries to fetch required data:
+      - SELECT name FROM services WHERE id = ? → serviceName
+      - SELECT slot_date FROM time_slots WHERE id = ? → bookingDate
+   3. Avoided variable redeclaration by renaming second query result from "slots" to "slotDetails"
+      (first "slots" query was already declared at line 29)
+   
+IMPACT: Bookings were already committed to database before the error occurred, so data persisted despite frontend error.
+         Now notifications will send successfully with correct service name and booking date.
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at cors (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:188:7)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:224:17
+    at originCallback (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:214:15)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:219:13
+
+[2026-03-05T15:37:57.212Z] POST /auth/login --> Route not found: POST /auth/login
+   Stack: AppError: Route not found: POST /auth/login
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at cors (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:188:7)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:224:17
+    at originCallback (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:214:15)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:219:13
+
+[2026-03-05T15:39:36.158Z] POST /login --> Route not found: POST /login
+   Stack: AppError: Route not found: POST /login
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at cors (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:188:7)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:224:17
+    at originCallback (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:214:15)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\cors\lib\index.js:219:13
+
+[2026-03-05T15:41:47.112Z] POST /api/auth/login --> Invalid email or password
+   Stack: Error: Invalid email or password
+    at exports.login (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\authController.js:214:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+[2026-03-05T15:43:52.846Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-05T15:43:55.311Z] POST /api/auth/logout --> Invalid or expired token. Please log in again.
+   Stack: Error: Invalid or expired token. Please log in again.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:64:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-05T15:51:40.073Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-05T15:58:41.181Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-05T15:58:43.318Z] POST /api/auth/logout --> Invalid or expired token. Please log in again.
+   Stack: Error: Invalid or expired token. Please log in again.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:64:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-05T16:04:22.894Z] POST /api/auth/login --> Invalid email or password
+   Stack: Error: Invalid email or password
+    at exports.login (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\authController.js:214:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+[2026-03-05T16:04:35.487Z] POST /api/auth/login --> Invalid email or password
+   Stack: Error: Invalid email or password
+    at exports.login (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\authController.js:214:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+[2026-03-05T16:16:30.235Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-05T16:16:32.382Z] POST /api/auth/logout --> Invalid or expired token. Please log in again.
+   Stack: Error: Invalid or expired token. Please log in again.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:64:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-05T16:16:53.638Z] POST /api/auth/logout --> Invalid or expired token. Please log in again.
+   Stack: Error: Invalid or expired token. Please log in again.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:64:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-05T16:18:33.090Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-05T16:19:19.523Z] POST /api/auth/login --> Invalid email or password
+   Stack: Error: Invalid email or password
+    at exports.login (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\authController.js:214:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+[2026-03-05] BOOKING CANCEL AND STATUS UPDATE BUGS FIXED:
+ERROR: ReferenceError: userId is not defined
+   File: controllers/bookingController.js
+   Issue: notifyBookingCancelled() and notifyStatusUpdate() were called with undefined variables (userId, bookingId, serviceName, bookingDate/status)
+   Root Cause: Variables were not defined in the function scopes. Service name and booking date were never fetched from database.
+   
+CHANGES MADE:
+   1. In cancelBooking():
+      - Updated SELECT query to include service_id.
+      - Added queries to fetch serviceName from services table and bookingDate from time_slots table.
+      - Fixed notifyBookingCancelled call: userId → user_id, bookingId → id, added serviceName and bookingDate.
+   2. In updateStatus():
+      - Updated SELECT query to include service_id.
+      - Added queries to fetch serviceName and bookingDate.
+      - Fixed notifyStatusUpdate call: userId → user_id, bookingId → id, serviceName, and status (instead of bookingDate).
+   
+IMPACT: Bookings cancellations and status updates were already committed to database before the error occurred, so data persisted despite frontend error.
+         Now notifications will send successfully with correct service name and booking date/status.
+
+[2026-03-05T16:43:32.617Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-05T16:51:19.545Z] POST /api/auth/login --> Invalid email or password
+   Stack: Error: Invalid email or password
+    at exports.login (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\authController.js:214:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+[2026-03-05] Error in getAllBookings: Unknown column 'u.name' in 'field list'
+Fix applied: Changed 'u.name' to 'CONCAT(u.first_name, \' \', u.last_name)' in the SQL query for customer_name in bookingController.js
+
+[2026-03-05T23:44:58.384Z] POST /api/auth/login --> Invalid email or password
+   Stack: Error: Invalid email or password
+    at exports.login (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\authController.js:233:19)
