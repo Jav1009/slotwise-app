@@ -1,0 +1,4 @@
+[2026-03-05] Error: Deprecated FirebaseMessaging.onTokenRefresh API used in auth_service.dart. Fixed by changing to FirebaseMessaging.instance.onTokenRefresh.
+[2026-03-05] Update: Fix applied successfully. Flutter analyze shows no compilation errors related to onTokenRefresh.
+[2026-03-05] Error: Gradle build failed due to flutter_local_notifications requiring core library desugaring. Fixed by enabling isCoreLibraryDesugaringEnabled = true in compileOptions and adding coreLibraryDesugaring dependency in android/app/build.gradle.kts.
+[2026-03-05] Error: Null check operator used on a null value in ProfileScreen when accessing auth.user. Added guard and fallback UI to prevent crash.

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "150565828422",
+    "project_id": "slotwise-93f69",
+    "storage_bucket": "slotwise-93f69.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:150565828422:android:be48e3880e3b15c343d747",
+        "android_client_info": {
+          "package_name": "com.example.slot_wise_booking"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBYd6RDCFTJYchO9ck4Dg70Rtwsx4-Jyg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:150565828422:android:61b129ff2179f63643d747",
+        "android_client_info": {
+          "package_name": "com.example.slotwise"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBYd6RDCFTJYchO9ck4Dg70Rtwsx4-Jyg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

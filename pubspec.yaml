@@ -1,0 +1,61 @@
+name: slot_wise_booking
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # supabase
+  supabase_flutter: ^2.12.0
+  
+  # ── Firebase ────────────────────────────────────────────────
+  # firebase_core MUST be listed before all other Firebase packages
+  # It bootstraps the Firebase connection at app startup
+  firebase_core:    ^2.32.0
+  # firebase_auth:    ^4.15.2
+  # firebase_storage: ^11.5.6
+
+  # Firebase Cloud Messaging — push notifications
+  firebase_messaging: ^14.7.10
+
+  # Local notifications — for showing foreground notifications while app is open
+  flutter_local_notifications: ^17.2.3
+
+
+  # ── State management ─────────────────────────────────────────
+  provider: ^6.1.1
+
+  # ── Networking ───────────────────────────────────────────────
+  # Dio supports interceptors — used to auto-inject JWT on every request
+  dio: ^5.4.0
+
+  # ── Secure token storage ─────────────────────────────────────
+  # Encrypts JWT on device:
+  #   Android → EncryptedSharedPreferences
+  #   iOS     → Keychain
+  flutter_secure_storage: ^9.0.0
+
+  # ── UI packages ───────────────────────────────────────────────
+  table_calendar:       ^3.0.9    # Calendar widget for slot picking
+  image_picker:         ^1.0.7    # Pick images from gallery or camera
+  fl_chart:             ^0.66.2   # Charts for admin dashboard
+  cached_network_image: ^3.3.1    # Network images with local disk cache
+  intl:                 ^0.19.0   # Date and time formatting
+  shared_preferences:   ^2.2.2    # Lightweight local key-value storage
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/
