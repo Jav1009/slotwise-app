@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../auth/login_screen.dart';
+import '../services/services_list_screen.dart';
+import '../bookings/my_bookings_screen.dart';
 
 class UserDashboardScreen extends StatelessWidget {
   const UserDashboardScreen({super.key});
@@ -148,9 +150,9 @@ class UserDashboardScreen extends StatelessWidget {
                     subtitle: 'Browse services and book',
                     color: AppColors.primary,
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Services screen coming soon!'),
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ServicesListScreen(),
                         ),
                       );
                     },
@@ -162,9 +164,9 @@ class UserDashboardScreen extends StatelessWidget {
                     subtitle: 'View your appointments',
                     color: AppColors.success,
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Bookings screen coming soon!'),
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const MyBookingsScreen(),
                         ),
                       );
                     },
