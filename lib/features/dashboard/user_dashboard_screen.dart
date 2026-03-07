@@ -8,12 +8,12 @@ import '../../core/constants/app_colors.dart';
 import '../auth/login_screen.dart';
 import '../services/services_list_screen.dart';
 import '../bookings/my_bookings_screen.dart';
+import '../admin/admin_dashboard_screen.dart';
 
 class UserDashboardScreen extends StatelessWidget {
   const UserDashboardScreen({super.key});
-  
+
   Future<void> _handleLogout(BuildContext context) async {
-    // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -31,10 +31,9 @@ class UserDashboardScreen extends StatelessWidget {
         ],
       ),
     );
-    
+
     if (confirmed == true && context.mounted) {
       await context.read<AuthProvider>().logout();
-      
       if (context.mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -42,12 +41,12 @@ class UserDashboardScreen extends StatelessWidget {
       }
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-    final user = authProvider.currentUser;
-    
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
@@ -72,35 +71,27 @@ class UserDashboardScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          const Text(
                             'Welcome back,',
                             style: TextStyle(
-                              fontSize: 16,
-                              color: AppColors.textSecondary,
-                            ),
+                                fontSize: 16, color: AppColors.textSecondary),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             user.name,
                             style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
+                                fontSize: 24, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              Icon(
-                                Icons.email,
-                                size: 16,
-                                color: AppColors.textSecondary,
-                              ),
+                              const Icon(Icons.email,
+                                  size: 16, color: AppColors.textSecondary),
                               const SizedBox(width: 8),
                               Text(
                                 user.email,
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                ),
+                                style: const TextStyle(
+                                    color: AppColors.textSecondary),
                               ),
                             ],
                           ),
@@ -108,9 +99,7 @@ class UserDashboardScreen extends StatelessWidget {
                             const SizedBox(height: 12),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
+                                  horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
                                 color: AppColors.accent,
                                 borderRadius: BorderRadius.circular(8),
@@ -129,68 +118,67 @@ class UserDashboardScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
-                  // Placeholder sections
+
                   const Text(
                     'Quick Actions',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
-                  // Action cards
+
                   _buildActionCard(
                     icon: Icons.calendar_today,
                     title: 'Book Appointment',
                     subtitle: 'Browse services and book',
                     color: AppColors.primary,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const ServicesListScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const ServicesListScreen()),
+                    ),
                   ),
-                  
+
                   _buildActionCard(
                     icon: Icons.history,
                     title: 'My Bookings',
                     subtitle: 'View your appointments',
                     color: AppColors.success,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const MyBookingsScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const MyBookingsScreen()),
+                    ),
                   ),
-                  
+
+                  // ✅ FIXED: Admin panel card only visible to admin users
+                  if (auth.isAdmin)
+                    _buildActionCard(
+                      icon: Icons.admin_panel_settings_rounded,
+                      title: 'Admin Panel',
+                      subtitle: 'Manage services, slots & bookings',
+                      color: Colors.deepPurple,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (_) => const AdminDashboardScreen()),
+                      ),
+                    ),
+
                   _buildActionCard(
                     icon: Icons.person,
                     title: 'Profile',
                     subtitle: 'Manage your account',
                     color: AppColors.accent,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Profile screen coming soon!'),
-                        ),
-                      );
-                    },
+                    onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Profile screen coming soon!')),
+                    ),
                   ),
                 ],
               ),
             ),
     );
   }
-  
+
   Widget _buildActionCard({
     required IconData icon,
     required String title,
@@ -223,26 +211,19 @@ class UserDashboardScreen extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                          fontSize: 16, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                      ),
+                      style: const TextStyle(
+                          fontSize: 14, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
               ),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: AppColors.textSecondary,
-              ),
+              const Icon(Icons.arrow_forward_ios,
+                  size: 16, color: AppColors.textSecondary),
             ],
           ),
         ),

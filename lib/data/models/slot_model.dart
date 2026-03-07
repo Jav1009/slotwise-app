@@ -8,11 +8,11 @@ class SlotModel {
   final int serviceId;
   final DateTime date;
   final String startTime; // HH:mm:ss format
-  final String endTime;   // HH:mm:ss format
+  final String endTime; // HH:mm:ss format
   final bool isAvailable;
   final String? serviceName;
   final int? durationMinutes;
-  
+
   SlotModel({
     required this.id,
     required this.serviceId,
@@ -23,32 +23,32 @@ class SlotModel {
     this.serviceName,
     this.durationMinutes,
   });
-  
+
   // Format time as "9:00 AM - 10:00 AM"
   String get formattedTimeRange {
     final start = _formatTime(startTime);
     final end = _formatTime(endTime);
     return '$start - $end';
   }
-  
+
   // Format date as "Monday, Jan 15"
   String get formattedDate {
     return DateFormat('EEEE, MMM d').format(date);
   }
-  
+
   // Format start time only
   String get formattedStartTime => _formatTime(startTime);
-  
+
   // Format end time only
   String get formattedEndTime => _formatTime(endTime);
-  
+
   // Helper to format time from HH:mm:ss to 12-hour format
   String _formatTime(String time24) {
     try {
       final parts = time24.split(':');
       final hour = int.parse(parts[0]);
       final minute = parts[1];
-      
+
       if (hour == 0) {
         return '12:$minute AM';
       } else if (hour < 12) {
@@ -62,7 +62,7 @@ class SlotModel {
       return time24; // Return original if parsing fails
     }
   }
-  
+
   // From JSON
   factory SlotModel.fromJson(Map<String, dynamic> json) {
     return SlotModel(
@@ -71,12 +71,12 @@ class SlotModel {
       date: DateTime.parse(json['date'] as String),
       startTime: json['start_time'] as String,
       endTime: json['end_time'] as String,
-      isAvailable: json['is_available'] as bool,
+      isAvailable: json['is_available'] == 1 || json['is_available'] == true,
       serviceName: json['service_name'] as String?,
       durationMinutes: json['duration_minutes'] as int?,
     );
   }
-  
+
   // To JSON
   Map<String, dynamic> toJson() {
     return {
@@ -90,7 +90,7 @@ class SlotModel {
       'duration_minutes': durationMinutes,
     };
   }
-  
+
   @override
   String toString() {
     return 'SlotModel(id: $id, date: $formattedDate, time: $formattedTimeRange)';

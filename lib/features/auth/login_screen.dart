@@ -10,10 +10,11 @@ import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_button.dart';
 import 'register_screen.dart';
 import '../dashboard/user_dashboard_screen.dart';
+import '../admin/admin_dashboard_screen.dart'; // ✅ FIXED: import added
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
-  
+
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -23,38 +24,37 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  
+
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
-  
+
   Future<void> _handleLogin() async {
-    // Clear previous errors
     context.read<AuthProvider>().clearError();
-    
-    // Validate form
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-    
-    // Attempt login
+
+    if (!_formKey.currentState!.validate()) return;
+
     final success = await context.read<AuthProvider>().login(
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );
-    
+
     if (!mounted) return;
-    
+
     if (success) {
-      // Navigate to dashboard
+      final auth = context.read<AuthProvider>();
+      // ✅ FIXED: route based on role instead of always going to UserDashboardScreen
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const UserDashboardScreen()),
+        MaterialPageRoute(
+          builder: (_) => auth.isAdmin
+              ? const AdminDashboardScreen()
+              : const UserDashboardScreen(),
+        ),
       );
     } else {
-      // Show error
       final error = context.read<AuthProvider>().error;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -64,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 40),
-                
+
                 // Logo / App Name
                 Center(
                   child: Column(
@@ -105,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
+                      const Text(
                         'Book your appointments easily',
                         style: TextStyle(
                           fontSize: 16,
@@ -115,29 +115,24 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 48),
-                
-                // Welcome text
+
                 const Text(
                   'Welcome back',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                Text(
+                const Text(
                   'Sign in to continue',
                   style: TextStyle(
                     fontSize: 16,
                     color: AppColors.textSecondary,
                   ),
                 ),
-                
+
                 const SizedBox(height: 32),
-                
-                // Email field
+
                 CustomTextField(
                   controller: _emailController,
                   label: 'Email',
@@ -146,10 +141,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   keyboardType: TextInputType.emailAddress,
                   validator: Validators.email,
                 ),
-                
+
                 const SizedBox(height: 16),
-                
-                // Password field
+
                 CustomTextField(
                   controller: _passwordController,
                   label: 'Password',
@@ -159,48 +153,41 @@ class _LoginScreenState extends State<LoginScreen> {
                   validator: Validators.password,
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
-                // Login button
+
                 Consumer<AuthProvider>(
-                  builder: (context, authProvider, _) {
-                    return CustomButton(
-                      text: 'Login',
-                      isLoading: authProvider.isLoading,
-                      onPressed: _handleLogin,
-                      icon: Icons.login,
-                    );
-                  },
+                  builder: (context, auth, _) => CustomButton(
+                    text: 'Login',
+                    isLoading: auth.isLoading,
+                    onPressed: _handleLogin,
+                    icon: Icons.login,
+                  ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
-                // Register link
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
+                    const Text(
                       "Don't have an account? ",
                       style: TextStyle(color: AppColors.textSecondary),
                     ),
                     TextButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const RegisterScreen(),
-                          ),
-                        );
-                      },
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const RegisterScreen(),
+                        ),
+                      ),
                       child: const Text(
                         'Register',
                         style: TextStyle(fontWeight: FontWeight.bold),

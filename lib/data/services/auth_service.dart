@@ -68,6 +68,7 @@ class AuthService {
     }
   }
   
+  
   /// Login existing user
   /// FLOW: Firebase Auth → Get token → Send to backend → Store JWT
   Future<UserModel> login({
@@ -84,7 +85,9 @@ class AuthService {
       
       // STEP 2: Get Firebase ID token
       final String? idToken = await userCredential.user?.getIdToken();
-      
+      print('Firebase Token: $idToken');
+
+
       if (idToken == null) {
         throw Exception('Failed to get Firebase token');
       }

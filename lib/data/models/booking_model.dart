@@ -11,17 +11,17 @@ class BookingModel {
   final String? notes;
   final DateTime createdAt;
   final DateTime? cancelledAt;
-  
+
   // Service details
   final String serviceName;
   final int? durationMinutes;
   final double price;
-  
+
   // Slot details
   final DateTime date;
   final String startTime;
   final String endTime;
-  
+
   BookingModel({
     required this.id,
     required this.status,
@@ -35,7 +35,7 @@ class BookingModel {
     required this.startTime,
     required this.endTime,
   });
-  
+
   // Status display text
   String get statusText {
     switch (status) {
@@ -51,7 +51,7 @@ class BookingModel {
         return status;
     }
   }
-  
+
   // Status color
   Color get statusColor {
     switch (status) {
@@ -67,7 +67,7 @@ class BookingModel {
         return AppColors.textSecondary;
     }
   }
-  
+
   // Check if booking is in the future
   bool get isFuture {
     final now = DateTime.now();
@@ -80,34 +80,34 @@ class BookingModel {
     );
     return bookingDateTime.isAfter(now);
   }
-  
+
   // Check if booking can be cancelled
   bool get canBeCancelled {
     return (status == 'pending' || status == 'confirmed') && isFuture;
   }
-  
+
   // Format date as "Monday, Jan 15, 2026"
   String get formattedDate {
     return DateFormat('EEEE, MMM d, y').format(date);
   }
-  
+
   // Format time range
   String get formattedTimeRange {
     final start = _formatTime(startTime);
     final end = _formatTime(endTime);
     return '$start - $end';
   }
-  
+
   // Format price
   String get formattedPrice => '\$${price.toStringAsFixed(2)}';
-  
+
   // Helper to format time
   String _formatTime(String time24) {
     try {
       final parts = time24.split(':');
       final hour = int.parse(parts[0]);
       final minute = parts[1];
-      
+
       if (hour == 0) {
         return '12:$minute AM';
       } else if (hour < 12) {
@@ -121,7 +121,7 @@ class BookingModel {
       return time24;
     }
   }
-  
+
   // From JSON
   factory BookingModel.fromJson(Map<String, dynamic> json) {
     return BookingModel(
@@ -134,13 +134,13 @@ class BookingModel {
           : null,
       serviceName: json['service_name'] as String,
       durationMinutes: json['duration_minutes'] as int?,
-      price: (json['price'] as num).toDouble(),
+      price: double.parse(json['price'].toString()),
       date: DateTime.parse(json['date'] as String),
       startTime: json['start_time'] as String,
       endTime: json['end_time'] as String,
     );
   }
-  
+
   // To JSON
   Map<String, dynamic> toJson() {
     return {
@@ -157,7 +157,7 @@ class BookingModel {
       'end_time': endTime,
     };
   }
-  
+
   @override
   String toString() {
     return 'BookingModel(id: $id, service: $serviceName, status: $status)';
