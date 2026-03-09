@@ -21,6 +21,7 @@ const {
     forgotPassword,
     resetPassword,
     updateFcmToken,          // NEW: stores FCM device token after login
+    getMe
 } = require('../controllers/authController');
 
 const { protect } = require('../middlewares/authMiddleware');  // JWT verification (alias to authMiddleware)
@@ -29,7 +30,7 @@ const { protect } = require('../middlewares/authMiddleware');  // JWT verificati
 // ─── Public Routes (no token required) ──────────────────────────────────────
 
 // POST /api/auth/register
-// Body: { locationCode, firstName, lastName, email, password }
+// Body: { firstName, lastName, email, password }
 router.post('/register', register);
 
 // POST /api/auth/login
@@ -47,6 +48,8 @@ router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 
 // ─── Protected Routes (valid JWT required) ───────────────────────────────────
+
+router.get('/me', protect, getMe);
 
 // POST /api/auth/logout
 // Clears fcm_token in DB for this user

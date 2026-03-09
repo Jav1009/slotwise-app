@@ -9,11 +9,31 @@
 // KEY CONCEPT — SELECT FOR UPDATE:
 //   Locks the row so only one transaction can proceed at a time.
 //   Prevents two users booking the same slot simultaneously.
-const pool = require('../config/db');
-const { notifyBookingConfirmed, notifyBookingCancelled, notifyStatusUpdate } = require('./notificationController');
+//
+// Changes from previous version:
+//   • createBooking: now also notifies the staff/admin who created the service
+//     via FCM push (looks up services.created_by → users.fcm_token)
+//   • Added: rescheduleBooking — moves booking to a new slot atomically
+//   • All other logic (transactions, SELECT FOR UPDATE, cancel, status) unchanged
 
+const pool = require('../config/db');
+const { notifyBookingConfirmed, notifyBookingCancelled, notifyStatusUpdate, notifyStaffNewBooking } = require('./notificationController');
+
+// ─────────────────────────────────────────────────────────────
+// CREATE BOOKING
 // POST /api/bookings
-exports.createBooking = async (req, res) => {
+// Body: { service_id, slot_id, notes? }
+// Protected — customer or any authenticated user
+//
+// Flow:
+//   1. Lock slot row (SELECT FOR UPDATE) — prevents race conditions
+//   2. Mark slot is_available = FALSE
+//   3. Insert booking row
+//   4. Insert notification for the customer
+//   5. Notify customer via FCM
+//   6. Notify the staff/admin who owns the service via FCM
+// ─────────────────────────────────────────────────────────────
+exports.createBooking = async (req, res, next) => {
   const { service_id, slot_id, notes } = req.body;
   const user_id = req.user.id;
 
@@ -48,42 +68,62 @@ exports.createBooking = async (req, res) => {
       [user_id, service_id, slot_id, notes || null]
     );
 
-    // Create notification
+    const bookingId = result.insertId;
+    const serviceName = services[0]?.name || 'Unknown Service';
+    const bookingDate = slotDetails[0]?.slot_date || 'Unknown Date';
+    const serviceOwner = services[0]?.created_by  || null;
+
+    // Create notification - In-app notification for the customer
     await conn.execute(
       'INSERT INTO notifications (user_id, booking_id, message) VALUES (?, ?, ?)',
-      [user_id, result.insertId, 'Your booking has been received and is pending confirmation.']
+      [user_id, bookingId, 'Your booking has been received and is pending confirmation.']
     );
 
-    await conn.commit();
+    // Create notification - In-app notification for the admin/staff
+    await conn.execute(
+      'INSERT INTO notifications (user_id, booking_id, message) VALUES (?, ?, ?)',
+      [serviceOwner, bookingId, `New booking: ${serviceName} on ${bookingDate} by .`]
+    );
 
     // Fetch service name and booking date for the notification
     const [services] = await conn.execute(
-      'SELECT name FROM services WHERE id = ?',
+      'SELECT name, created_by FROM services WHERE id = ?',
       [service_id]
     );
     const [slotDetails] = await conn.execute(
       'SELECT slot_date FROM time_slots WHERE id = ?',
       [slot_id]
     );
+    
+    await conn.commit();
 
-    const serviceName = services[0]?.name || 'Unknown Service';
-    const bookingDate = slotDetails[0]?.slot_date || 'Unknown Date';
+    // FCM: notify user
+    await notifyBookingConfirmed(user_id, bookingId, serviceName, bookingDate);
+    
+    // FCM: notify staff/admin who owns the service (if created_by is set)
+    if (serviceOwner) {
+        await notifyStaffNewBooking(serviceOwner, bookingId, serviceName, bookingDate);
+    }
 
-    await notifyBookingConfirmed(user_id, result.insertId, serviceName, bookingDate);
     return res.status(201).json({ message: 'Booking created successfully.', booking_id: result.insertId });
 
   } catch (err) {
     await conn.rollback();
     console.error('[bookings create]', err);
+    next(err)
     return res.status(500).json({ message: 'Booking failed. Please try again.' });
   } finally {
     conn.release(); // ALWAYS release back to pool
   }
 };
 
+// ─────────────────────────────────────────────────────────────
+// GET MY BOOKINGS
 // GET /api/bookings/my
+// Returns all bookings for the authenticated user.
 // WHERE b.user_id = ? ensures users ONLY see their own bookings
-exports.getMyBookings = async (req, res) => {
+// ─────────────────────────────────────────────────────────────
+exports.getMyBookings = async (req, res, next) => {
   const user_id = req.user.id;
   try {
     const [rows] = await pool.execute(
@@ -103,12 +143,65 @@ exports.getMyBookings = async (req, res) => {
     return res.json(rows);
   } catch (err) {
     console.error('[bookings myBookings]', err);
+    next(err)
     return res.status(500).json({ message: 'Failed to fetch bookings.' });
   }
 };
 
+// ─────────────────────────────────────────────────────────────
+// GET BOOKING BY ID
+// GET /api/bookings/:id
+// Customer can only see their own. Staff/admin can see any.
+// ─────────────────────────────────────────────────────────────
+exports.getBookingById = async (req, res, next) => {
+    const { id }   = req.params;
+    const { role, id: userId } = req.user;
+
+    try {
+        const [rows] = await pool.execute(
+            `SELECT
+               b.id, b.status, b.notes, b.created_at, b.updated_at,
+               b.user_id,
+               CONCAT(u.first_name, ' ', u.last_name) AS customer_name,
+               u.email AS customer_email,
+               s.id   AS service_id,
+               s.name AS service_name,
+               s.price, s.image_url, s.category,
+               t.id   AS slot_id,
+               t.slot_date, t.start_time, t.end_time
+             FROM   bookings   b
+             JOIN   users      u ON b.user_id    = u.id
+             JOIN   services   s ON b.service_id = s.id
+             JOIN   time_slots t ON b.slot_id    = t.id
+             WHERE  b.id = ?`,
+            [id]
+        );
+
+        if (rows.length === 0) {
+            res.status(404);
+            throw new Error('Booking not found');
+        }
+
+        const booking = rows[0];
+
+        // Customers can only view their own bookings
+        if (role === 'user' && booking.user_id !== userId) {
+            res.status(403);
+            throw new Error('Access denied');
+        }
+
+        return res.status(200).json({ status: 'success', data: booking });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// ─────────────────────────────────────────────────────────────
+// CANCEL BOOKING
 // PUT /api/bookings/:id/cancel
-exports.cancelBooking = async (req, res) => {
+// Customer can only cancel their own.
+// ─────────────────────────────────────────────────────────────
+exports.cancelBooking = async (req, res, next) => {
   const { id }  = req.params;
   const user_id = req.user.id;
 
@@ -142,33 +235,183 @@ exports.cancelBooking = async (req, res) => {
       'UPDATE time_slots SET is_available = TRUE WHERE id = ?', [slot_id]
     );
 
-    await conn.execute(
-      'INSERT INTO notifications (user_id, booking_id, message) VALUES (?, ?, ?)',
-      [user_id, id, 'Your booking has been cancelled and the slot has been freed.']
-    );
-
     // Fetch service name and booking date for notification
-    const [serviceRows] = await conn.execute('SELECT name FROM services WHERE id = ?', [service_id]);
+    const [serviceRows] = await conn.execute('SELECT name, created_by FROM services WHERE id = ?', [service_id]);
     const serviceName = serviceRows[0].name;
 
     const [slotRows] = await conn.execute('SELECT slot_date FROM time_slots WHERE id = ?', [slot_id]);
     const bookingDate = slotRows[0].slot_date;
 
+    const serviceOwner = serviceRows[0]?.created_by  || null;
+
+    // Create notification - In-app notification for the customer
+    await conn.execute(
+      'INSERT INTO notifications (user_id, booking_id, message) VALUES (?, ?, ?)',
+      [user_id, id, 'Your booking has been cancelled and the slot has been freed.']
+    );
+    
+    // Create notification - In-app notification for the admin/staff
+    await conn.execute(
+      'INSERT INTO notifications (user_id, booking_id, message) VALUES (?, ?, ?)',
+      [serviceOwner, id, `A booking '${serviceName}' has been cancelled.\n${bookingDate}`]
+    );
+
     await conn.commit();
+
+    // FCM: notify customer
     await notifyBookingCancelled(user_id, id, serviceName, bookingDate);
+
+    // FCM: notify staff/admin who owns the service (if created_by is set)
+    if (serviceOwner) {
+        await notifyStaffNewBooking(serviceOwner, id, serviceName, bookingDate);
+    }
     return res.json({ message: 'Booking cancelled successfully.' });
 
   } catch (err) {
     await conn.rollback();
     console.error('[bookings cancel]', err);
+    next(err);
     return res.status(500).json({ message: 'Cancellation failed. Please try again.' });
   } finally {
     conn.release();
   }
 };
 
-// GET /api/bookings  (Admin)
-exports.getAllBookings = async (req, res) => {
+// ─────────────────────────────────────────────────────────────
+// RESCHEDULE BOOKING
+// PUT /api/bookings/:id/reschedule
+// Body: { new_slot_id }
+// Customer can only reschedule their own pending/confirmed bookings.
+//
+// Flow:
+//   1. Verify booking belongs to user and is not cancelled/completed
+//   2. Lock new slot (SELECT FOR UPDATE) — ensure it's still available
+//   3. Free old slot → mark new slot taken → update booking.slot_id
+//   4. Notify customer of the change
+// ─────────────────────────────────────────────────────────────
+exports.rescheduleBooking = async (req, res, next) => {
+    const { id }          = req.params;
+    const { new_slot_id } = req.body;
+    const user_id         = req.user.id;
+
+    if (!new_slot_id) {
+        res.status(400);
+        return next(new Error('new_slot_id is required'));
+    }
+
+    const conn = await pool.getConnection();
+    try {
+        await conn.beginTransaction();
+
+        // Fetch current booking — must belong to this user
+        const [bookingRows] = await conn.execute(
+            'SELECT slot_id, service_id, status FROM bookings WHERE id = ? AND user_id = ?',
+            [id, user_id]
+        );
+
+        if (bookingRows.length === 0) {
+            await conn.rollback();
+            res.status(404);
+            throw new Error('Booking not found');
+        }
+
+        const { slot_id: old_slot_id, service_id, status } = bookingRows[0];
+
+        if (status === 'cancelled' || status === 'completed') {
+            await conn.rollback();
+            res.status(400);
+            throw new Error(`Cannot reschedule a booking with status '${status}'`);
+        }
+
+        if (old_slot_id === new_slot_id) {
+            await conn.rollback();
+            res.status(400);
+            throw new Error('New slot is the same as the current slot');
+        }
+
+        // Lock the new slot
+        const [newSlots] = await conn.execute(
+            'SELECT id FROM time_slots WHERE id = ? AND service_id = ? AND is_available = TRUE FOR UPDATE',
+            [new_slot_id, service_id]
+        );
+
+        if (newSlots.length === 0) {
+            await conn.rollback();
+            res.status(409);
+            throw new Error('The selected slot is no longer available');
+        }
+
+        // Free old slot
+        await conn.execute(
+            'UPDATE time_slots SET is_available = TRUE WHERE id = ?', [old_slot_id]
+        );
+
+        // Mark new slot taken
+        await conn.execute(
+            'UPDATE time_slots SET is_available = FALSE WHERE id = ?', [new_slot_id]
+        );
+
+        // Update booking to point to new slot
+        await conn.execute(
+            'UPDATE bookings SET slot_id = ?, status = ? WHERE id = ?',
+            [new_slot_id, 'pending', id] // Reset to pending after reschedule
+        );
+
+        // Fetch details for notification
+        // Fetch service name and booking date for notification
+        const [serviceRows] = await conn.execute('SELECT name FROM services WHERE id = ?', [service_id]);
+        const serviceName = serviceRows[0].name;
+
+        const [slotRows]    = await conn.execute('SELECT slot_date, start_time FROM time_slots WHERE id = ?', [new_slot_id]);
+        const bookingDate = slotRows[0].slot_date;
+
+        const serviceOwner = serviceRows[0]?.created_by  || null;
+
+        await conn.execute(
+            'INSERT INTO notifications (user_id, booking_id, message) VALUES (?, ?, ?)',
+            [user_id, id, `Your booking has been rescheduled to ${slotRows[0].slot_date} at ${slotRows[0].start_time}.`]
+        );
+
+        await conn.execute(
+            'INSERT INTO notifications (user_id, booking_id, message) VALUES (?, ?, ?)',
+            [serviceOwner, id, `A booking has been rescheduled to ${slotRows[0].slot_date} at ${slotRows[0].start_time}.`]
+        );
+
+        await conn.commit();
+
+        // FCM: notify customer
+        await notifyBookingCancelled(user_id, id, serviceName, bookingDate);
+
+        // FCM: notify staff/admin who owns the service (if created_by is set)
+        if (serviceOwner) {
+            await notifyStaffNewBooking(serviceOwner, id, serviceName, bookingDate);
+        }
+
+        return res.status(200).json({
+            status:  'success',
+            message: 'Booking rescheduled successfully.',
+            data: {
+                booking_id:  parseInt(id),
+                new_slot_id,
+                slot_date:   slotRows[0].slot_date,
+                start_time:  slotRows[0].start_time,
+                service:     serviceRows[0].name
+            }
+        });
+    } catch (err) {
+        await conn.rollback();
+        next(err);
+    } finally {
+        conn.release();
+    }
+};
+
+// ─────────────────────────────────────────────────────────────
+// GET ALL BOOKINGS
+// GET /api/bookings?status=&date=&service_id=
+// Staff or Admin — sees all bookings with filter support
+// ─────────────────────────────────────────────────────────────
+exports.getAllBookings = async (req, res, next) => {
   const { status, date, service_id } = req.query;
   try {
     let sql = `
@@ -194,12 +437,17 @@ exports.getAllBookings = async (req, res) => {
     return res.json(rows);
   } catch (err) {
     console.error('[bookings getAll]', err);
+    next(err)
     return res.status(500).json({ message: 'Failed to fetch bookings.' });
   }
 };
 
-// PUT /api/bookings/:id/status  (Admin)
-exports.updateStatus = async (req, res) => {
+// ─────────────────────────────────────────────────────────────
+// UPDATE BOOKING STATUS
+// PUT /api/bookings/:id/status  (staff or admin)
+// Body: { status }
+// ─────────────────────────────────────────────────────────────
+exports.updateStatus = async (req, res, next) => {
   const { id }     = req.params;
   const { status } = req.body;
 
@@ -241,6 +489,10 @@ exports.updateStatus = async (req, res) => {
         'INSERT INTO notifications (user_id, booking_id, message) VALUES (?, ?, ?)',
         [user_id, id, messages[status]]
       );
+      // await conn.execute(
+      //   'INSERT INTO notifications (user_id, booking_id, message) VALUES (?, ?, ?)',
+      //   [user_id, id, messages[status]]
+      // );
     }
 
     // Fetch service name and booking date for notification
@@ -252,6 +504,7 @@ exports.updateStatus = async (req, res) => {
 
     await conn.commit();
     await notifyStatusUpdate(user_id, id, serviceName, status);
+    
     return res.json({ message: `Booking status updated to '${status}'.` });
 
   } catch (err) {

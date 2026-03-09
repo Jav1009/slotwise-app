@@ -2,6 +2,11 @@
 // Sends push notifications via Firebase Admin SDK (firebase-admin)
 // This controller handles: single-user notifications, multi-user broadcast,
 // and booking-specific notification helpers used by bookingController.
+//
+// Changes from previous version:
+//   • Added: notifyStaffNewBooking — notifies the service owner when a customer books
+//   • Fixed: notifyStatusUpdate status message keys now lowercase to match DB values
+//   • All other logic (sendToToken, clearStaleToken, broadcast, etc.) unchanged
 
 const pool = require('../config/db');
 const admin = require('../config/firebase');  // Firebase Admin SDK instance
@@ -145,6 +150,33 @@ exports.notifyBookingConfirmed = async (userId, bookingId, serviceName, bookingD
 };
 
 // ─────────────────────────────────────────────────────────────
+// NOTIFY STAFF/ADMIN — New Booking on Their Service
+// Called by bookingController.createBooking after a booking is created.
+// Looks up the FCM token of the user in services.created_by.
+// ─────────────────────────────────────────────────────────────
+exports.notifyStaffNewBooking = async (staffUserId, bookingId, serviceName, bookingDate) => {
+    try {
+        const [rows] = await pool.query(
+            'SELECT fcm_token, first_name FROM users WHERE id = ? AND is_active = 1',
+            [staffUserId]
+        );
+        if (rows.length === 0 || !rows[0].fcm_token) {
+            console.log(`ℹ️  No FCM token for staff user ${staffUserId}. New booking notification skipped.`);
+            return;
+        }
+
+        await sendToToken(
+            rows[0].fcm_token,
+            '📅 New Booking',
+            `A new booking has been made for ${serviceName} on ${bookingDate}.`,
+            { type: 'new_booking', booking_id: String(bookingId), service_name: serviceName, booking_date: bookingDate }
+        );
+    } catch (error) {
+        console.error('❌  notifyStaffNewBooking error:', error.message);
+    }
+};
+
+// ─────────────────────────────────────────────────────────────
 // SEND BOOKING CANCELLATION NOTIFICATION
 // Called by bookingController when a booking is cancelled (by user or admin)
 // ─────────────────────────────────────────────────────────────
@@ -189,10 +221,10 @@ exports.notifyStatusUpdate = async (userId, bookingId, serviceName, newStatus) =
 
         // Map status values to user-friendly messages
         const statusMessages = {
-            Confirmed:  `Your booking for ${serviceName} has been confirmed.`,
-            Completed:  `Your ${serviceName} appointment has been marked as completed.`,
-            Cancelled:  `Your booking for ${serviceName} has been cancelled by an admin.`,
-            Pending:    `Your booking for ${serviceName} is pending review.`
+            confirmed:  `Your booking for ${serviceName} has been confirmed.`,
+            completed:  `Your ${serviceName} appointment has been marked as completed.`,
+            cancelled:  `Your booking for ${serviceName} has been cancelled by an admin.`,
+            pending:    `Your booking for ${serviceName} is pending review.`
         };
 
         const body = statusMessages[newStatus] || `Your booking status has been updated to: ${newStatus}`;

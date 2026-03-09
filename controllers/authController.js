@@ -52,6 +52,7 @@ function hashOTP(otp) {
 // POST /api/auth/register
 // Body: { locationCode, firstName, lastName, email, password }
 // Creates a new user — role is always 'user' on self-registration
+// Staff and admin accounts must be created/promoted by an admin.
 // ─────────────────────────────────────────────────────────────
 // exports.register = async (req, res) => {
 //   try {
@@ -90,18 +91,19 @@ exports.register = async (req, res, next) => {
         }
 
         // // Step 2: Verify locationCode maps to an active location
-        // const [locRows] = await pool.query(
-        //     'SELECT id FROM locations WHERE code = ? AND is_active = 1',
-        //     [locationCode]
-        // );
+        /* const [locRows] = await pool.query(
+             'SELECT id FROM locations WHERE code = ? AND is_active = 1',
+             [locationCode]
+         );
 
-        // if (locRows.length === 0) {
-        //     res.status(400);
-        //     throw new Error('Invalid or inactive location code');
-        // }
+         if (locRows.length === 0) {
+             res.status(400);
+             throw new Error('Invalid or inactive location code');
+         }
 
-        // const location_id = locRows[0].id; // Resolved location ID for the FK
-
+         const location_id = locRows[0].id; // Resolved location ID for the FK
+*/
+        
         // Step 3: Check for duplicate email — must be unique across users
         const [userRows] = await pool.query(
             'SELECT id FROM users WHERE email = ?',
@@ -122,7 +124,8 @@ exports.register = async (req, res, next) => {
         const [result] = await pool.query(
             `INSERT INTO users (first_name, last_name, email, password_hash, role)
              VALUES (?, ?, ?, ?, 'user')`,
-            [firstName, lastName, email, password_hash]
+            // [firstName., lastName, email, password_hash]
+            [firstName.trim(), lastName.trim(), email.toLowerCase(), password_hash]
         );
 
         // Step 6: Generate JWT for immediate login after registration
@@ -205,7 +208,8 @@ exports.login = async (req, res, next) => {
              FROM users
              WHERE email = ?
              LIMIT 1`,
-            [email]
+            // [email]
+            [email.toLowerCase().trim()]
         );
 
         // Step 3: Generic error if not found — prevents email enumeration
@@ -243,11 +247,11 @@ exports.login = async (req, res, next) => {
                 token,
                 user: {
                     id: user.id,
-                    location_id: user.location_id,
+                    // location_id: user.location_id,
                     firstName: user.first_name,
                     lastName: user.last_name,
                     email: user.email,
-                    role: user.role,
+                    role: user.role,  // 'user' | 'staff' | 'admin'
                     // Return whether an FCM token is registered for this device
                     // Flutter uses this to decide if it needs to call PUT /api/auth/fcm-token
                     hasFcmToken: !!user.fcm_token
@@ -340,7 +344,8 @@ exports.forgotPassword = async (req, res, next) => {
             `SELECT id, first_name, last_name, email
              FROM users
              WHERE email = ? AND is_active = 1`,
-            [email]
+            // [email]
+            [email.toLowerCase().trim()]
         );
 
         // Return 200 even if no user found — prevents account discovery
@@ -382,6 +387,9 @@ exports.forgotPassword = async (req, res, next) => {
             resetCode: otp   // Raw OTP sent to user, never stored
         }).sendPasswordResetEmail();
 
+        // DEV ONLY — remove before production:
+        console.log(`[DEV] OTP for ${user.email}: ${otp}`);
+
         res.status(200).json({
             status: 'success',
             message: 'OTP sent to your email address',
@@ -413,7 +421,8 @@ exports.resetPassword = async (req, res, next) => {
             `SELECT id, first_name, last_name, email, reset_token_hash, reset_token_expires
              FROM users
              WHERE email = ? AND is_active = 1`,
-            [email]
+            // [email]
+            [email.toLowerCase().trim()]
         );
 
         // Generic error — don't reveal whether account exists
@@ -487,15 +496,34 @@ exports.resetPassword = async (req, res, next) => {
 exports.getMe = async (req, res) => {
   try {
     const [rows] = await pool.execute(
-      'SELECT id, uid, name, email, role, profile_picture_url, created_at FROM users WHERE id = ?',
+      'SELECT id, first_name, last_name, email, role, profile_picture_url, created_at FROM users WHERE id = ?',
       [req.user.id]
     );
     if (rows.length === 0) {
       return res.status(404).json({ message: 'User not found.' });
     }
+
+/*
     return res.json(rows[0]);
-  } catch (err) {
-    console.error('[auth me]', err);
-    return res.status(500).json({ message: 'Failed to fetch profile.' });
-  }
+   } catch (err) {
+     console.error('[auth me]', err);
+     return res.status(500).json({ message: 'Failed to fetch profile.' });
+   }
+*/
+    const u = rows[0];
+        res.status(200).json({
+            status: 'success',
+            data: {
+                id:                u.id,
+                firstName:         u.first_name,
+                lastName:          u.last_name,
+                email:             u.email,
+                role:              u.role,
+                profilePictureUrl: u.profile_picture_url,
+                createdAt:         u.created_at
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
 };
