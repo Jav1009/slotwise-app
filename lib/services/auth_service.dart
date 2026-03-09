@@ -151,13 +151,15 @@ class AuthService {
       final response = await http.get(
         Uri.parse('$_baseUrl/auth/me'),
         headers: headers,
-      );
+      ).timeout(const Duration(seconds: 10));
 
       final body = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
+        // Backend may return user in body['data'] or body['user'] depending on version
+        final userJson = body['data'] ?? body['user'] ?? body;
         return AuthResult.success(
-          user: _UserData.fromJson(body['data'] ?? body['user'] ?? body),
+          user: _UserData.fromJson(userJson),
         );
       }
 
@@ -258,8 +260,7 @@ class AuthService {
       }
 
       final fcmToken = await FirebaseMessaging.instance.getToken();
-      if (fcmToken == null)
-        return; // Firebase not configured or token unavailable
+      if (fcmToken == null)  return; // Firebase not configured or token unavailable
 
       final headers = await _authHeaders();
       await http.put(

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:slot_wise_booking/models/service_model.dart';
 import 'package:slot_wise_booking/services/api_service.dart';
-import '../../../core/constants/api_constants.dart';
+import '../core/constants/api_constants.dart';
 
 class ManageServicesScreen extends StatefulWidget {
   const ManageServicesScreen({super.key});

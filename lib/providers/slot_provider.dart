@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:slot_wise_booking/models/slot_model.dart';
 import 'package:slot_wise_booking/services/api_service.dart';
-import '../../../core/constants/api_constants.dart';
+import '../core/constants/api_constants.dart';
 
 class SlotProvider extends ChangeNotifier {
   List<SlotModel> _slots       = [];

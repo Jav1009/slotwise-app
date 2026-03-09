@@ -46,3 +46,7 @@ app.*.map.json
 
 #
 *.zip
+
+firebase.json
+firebase_options.dart
+

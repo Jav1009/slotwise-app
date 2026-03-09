@@ -1,7 +1,7 @@
 // features/slots/screens/slot_picker_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:slot_wise_booking/features/auth/screens/booking_confirm_screen.dart';
+import 'package:slot_wise_booking/screens/booking_confirm_screen.dart';
 import 'package:slot_wise_booking/models/service_model.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../providers/slot_provider.dart';

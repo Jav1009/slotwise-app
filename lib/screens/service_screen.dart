@@ -2,12 +2,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:slot_wise_booking/features/auth/screens/admin_dashboard_screen.dart';
-import 'package:slot_wise_booking/features/auth/screens/profile_screen.dart';
-import 'package:slot_wise_booking/features/auth/screens/slot_picker_screen.dart';
+import 'package:slot_wise_booking/screens/admin_dashboard_screen.dart';
+import 'package:slot_wise_booking/screens/profile_screen.dart';
+import 'package:slot_wise_booking/screens/slot_picker_screen.dart';
 import 'package:slot_wise_booking/models/service_model.dart';
 import '../providers/service_provider.dart';
-import '../../../features/auth/providers/auth_provider.dart';
+import '../providers/auth_provider.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});

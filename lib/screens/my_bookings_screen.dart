@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:slot_wise_booking/models/booking_model.dart';
 import '../providers/booking_provider.dart';
-import '../../../core/constants/app_colors.dart';
+import '../core/constants/app_colors.dart';
 
 class MyBookingsScreen extends StatefulWidget {
   const MyBookingsScreen({super.key});
