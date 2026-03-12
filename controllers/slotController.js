@@ -5,6 +5,24 @@ const pool = require('../config/db');
 exports.getSlots = async (req, res) => {
   const { service_id, date } = req.query;
 
+  //---------------------------------------------------
+  const includeAll = req.query.all === 'true';
+  const dateParam = req.query.date || req.query.slot_date;
+
+  let query = `SELECT * FROM time_slots WHERE service_id = ?`;
+  const params = [serviceId];
+
+  if (dateParam) {
+    query += ` AND slot_date = ?`;
+    params.push(dateParam);
+  }
+  // Only filter is_available if NOT requesting all
+  if (!includeAll) {
+    query += ` AND is_available = 1`;
+  }
+  query += ` ORDER BY start_time ASC`;
+
+  //------------------------------------------
   if (!service_id || !date) {
     return res.status(400).json({ message: 'service_id and date are required query params.' });
   }
@@ -35,7 +53,7 @@ exports.createSlots = async (req, res) => {
 
   try {
     const values = slots.map(() => '(?, ?, ?, ?)').join(', ');
-    const params  = slots.flatMap(s => [service_id, slot_date, s.start_time, s.end_time]);
+    const params = slots.flatMap(s => [service_id, slot_date, s.start_time, s.end_time]);
 
     await pool.execute(
       `INSERT IGNORE INTO time_slots (service_id, slot_date, start_time, end_time) VALUES ${values}`,
@@ -58,8 +76,8 @@ exports.update = async (req, res) => {
     const fields = [];
     const params = [];
 
-    if (start_time   !== undefined) { fields.push('start_time = ?');   params.push(start_time); }
-    if (end_time     !== undefined) { fields.push('end_time = ?');     params.push(end_time); }
+    if (start_time !== undefined) { fields.push('start_time = ?'); params.push(start_time); }
+    if (end_time !== undefined) { fields.push('end_time = ?'); params.push(end_time); }
     if (is_available !== undefined) { fields.push('is_available = ?'); params.push(is_available); }
 
     if (fields.length === 0) return res.status(400).json({ message: 'No fields to update.' });

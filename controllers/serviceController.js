@@ -7,7 +7,7 @@
 //   • update: accepts category field
 //   • All other logic unchanged
 
-const { status } = require('express/lib/response');
+// const { status } = require('express/lib/response');
 const pool = require('../config/db');
 
 // ─────────────────────────────────────────────────────────────
@@ -21,45 +21,45 @@ const pool = require('../config/db');
 //
 // Staff can then remove individual slots they don't want.
 // ─────────────────────────────────────────────────────────────
-const DAYS_AHEAD    = 30;          // How many days ahead to pre-generate
-const DAY_START     = 9 * 60;      // 09:00 in minutes from midnight
-const DAY_END       = 17 * 60;     // 17:00 in minutes from midnight
+const DAYS_AHEAD = 30;          // How many days ahead to pre-generate
+const DAY_START = 9 * 60;      // 09:00 in minutes from midnight
+const DAY_END = 17 * 60;     // 17:00 in minutes from midnight
 
 function minutesToTime(minutes) {
-    // Converts 570 → '09:30:00'
-    const h = Math.floor(minutes / 60).toString().padStart(2, '0');
-    const m = (minutes % 60).toString().padStart(2, '0');
-    return `${h}:${m}:00`;
+  // Converts 570 → '09:30:00'
+  const h = Math.floor(minutes / 60).toString().padStart(2, '0');
+  const m = (minutes % 60).toString().padStart(2, '0');
+  return `${h}:${m}:00`;
 }
 
 async function autoGenerateSlots(conn, serviceId, durationMinutes) {
-    const today  = new Date();
-    const values = [];
-    const params = [];
+  const today = new Date();
+  const values = [];
+  const params = [];
 
-    for (let d = 0; d < DAYS_AHEAD; d++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + d);
-        const dateStr = date.toISOString().split('T')[0]; // 'YYYY-MM-DD'
+  for (let d = 0; d < DAYS_AHEAD; d++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + d);
+    const dateStr = date.toISOString().split('T')[0]; // 'YYYY-MM-DD'
 
-        let cursor = DAY_START;
-        while (cursor + durationMinutes <= DAY_END) {
-            const start = minutesToTime(cursor);
-            const end   = minutesToTime(cursor + durationMinutes);
-            values.push('(?, ?, ?, ?)');
-            params.push(serviceId, dateStr, start, end);
-            cursor += durationMinutes;
-        }
+    let cursor = DAY_START;
+    while (cursor + durationMinutes <= DAY_END) {
+      const start = minutesToTime(cursor);
+      const end = minutesToTime(cursor + durationMinutes);
+      values.push('(?, ?, ?, ?)');
+      params.push(serviceId, dateStr, start, end);
+      cursor += durationMinutes;
     }
+  }
 
-    if (values.length === 0) return;
+  if (values.length === 0) return;
 
-    // INSERT IGNORE — UNIQUE KEY on (service_id, slot_date, start_time) prevents dupes
-    await conn.query(
-        `INSERT IGNORE INTO time_slots (service_id, slot_date, start_time, end_time)
+  // INSERT IGNORE — UNIQUE KEY on (service_id, slot_date, start_time) prevents dupes
+  await conn.query(
+    `INSERT IGNORE INTO time_slots (service_id, slot_date, start_time, end_time)
          VALUES ${values.join(', ')}`,
-        params
-    );
+    params
+  );
 }
 
 
@@ -71,8 +71,16 @@ async function autoGenerateSlots(conn, serviceId, durationMinutes) {
 // ─────────────────────────────────────────────────────────────
 exports.getAll = async (req, res, next) => {
   const { search, category } = req.query;
+
+  //---------------------------------
+  const includeInactive = req.query.include_inactive === 'true';
+  if (!includeInactive) {
+    whereConditions.push('is_active = 1');
+  }
+  //------------------------------------
+
   try {
-    let sql    = 'SELECT * FROM services WHERE is_active = TRUE';
+    let sql = 'SELECT * FROM services WHERE is_active = TRUE';
     let params = [];
 
     if (search) {
@@ -81,22 +89,22 @@ exports.getAll = async (req, res, next) => {
     }
 
     if (category) {
-        sql += ' AND category = ?';
-        params.push(category);
+      sql += ' AND category = ?';
+      params.push(category);
     }
 
     sql += ' ORDER BY category asc, name ASC';
 
     const [rows] = await pool.execute(sql, params);
-  //   return res.json(rows);
-  // } catch (err) {
-  //   console.error('[services getAll]', err);
-  //   return res.status(500).json({ message: 'Failed to fetch services.' });
-  // }
+    //   return res.json(rows);
+    // } catch (err) {
+    //   console.error('[services getAll]', err);
+    //   return res.status(500).json({ message: 'Failed to fetch services.' });
+    // }
     return res.status(200).json({ status: 'success', data: rows });
-      } catch (err) {
-          next(err);
-      }
+  } catch (err) {
+    next(err);
+  }
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -122,7 +130,7 @@ exports.getOne = async (req, res, next) => {
       [id]
     );
 
-    return res.status(200).json({status: 'success', data:{ ...services[0], slots }});
+    return res.status(200).json({ status: 'success', data: { ...services[0], slots } });
   } catch (err) {
     // console.error('[services getOne]', err);
     // return res.status(500).json({ message: 'Failed to fetch service.' });
@@ -151,33 +159,33 @@ exports.create = async (req, res, next) => {
     const [result] = await conn.query(
       'INSERT INTO services (name, description, duration_minutes, price, image_url, category, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [
-        name.trim(), 
-        description || null, 
-        duration_minutes, 
-        price, 
-        image_url || null, 
-        category, 
+        name.trim(),
+        description || null,
+        duration_minutes,
+        price,
+        image_url || null,
+        category,
         req.user.id  // Track who created this service (for staff notifications)
       ]
     );
     const serviceId = result.insertId;
 
-        // Auto-generate time slots for next 30 days
-        await autoGenerateSlots(conn, serviceId, duration_minutes);
+    // Auto-generate time slots for next 30 days
+    await autoGenerateSlots(conn, serviceId, duration_minutes);
 
-        await conn.commit();
+    await conn.commit();
 
-        return res.status(201).json({
-            status:  'success',
-            message: 'Service created and slots auto-generated.',
-            data:    { id: serviceId }
-        });
-    } catch (err) {
-        await conn.rollback();
-        next(err);
-    } finally {
-        conn.release();
-    }
+    return res.status(201).json({
+      status: 'success',
+      message: 'Service created and slots auto-generated.',
+      data: { id: serviceId }
+    });
+  } catch (err) {
+    await conn.rollback();
+    next(err);
+  } finally {
+    conn.release();
+  }
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -193,13 +201,13 @@ exports.update = async (req, res, next) => {
     const fields = [];
     const params = [];
 
-    if (name             !== undefined) { fields.push('name = ?');             params.push(name); }
-    if (description      !== undefined) { fields.push('description = ?');      params.push(description); }
+    if (name !== undefined) { fields.push('name = ?'); params.push(name); }
+    if (description !== undefined) { fields.push('description = ?'); params.push(description); }
     if (duration_minutes !== undefined) { fields.push('duration_minutes = ?'); params.push(duration_minutes); }
-    if (price            !== undefined) { fields.push('price = ?');            params.push(price); }
-    if (image_url        !== undefined) { fields.push('image_url = ?');        params.push(image_url); }
-    if (category         !== undefined) { fields.push('category = ?');         params.push(category); }
-    if (is_active        !== undefined) { fields.push('is_active = ?');        params.push(is_active); }
+    if (price !== undefined) { fields.push('price = ?'); params.push(price); }
+    if (image_url !== undefined) { fields.push('image_url = ?'); params.push(image_url); }
+    if (category !== undefined) { fields.push('category = ?'); params.push(category); }
+    if (is_active !== undefined) { fields.push('is_active = ?'); params.push(is_active); }
 
     if (fields.length === 0) {
       return res.status(400).json({ message: 'No fields to update.' });
@@ -207,7 +215,7 @@ exports.update = async (req, res, next) => {
 
     params.push(id);
     await pool.execute(`UPDATE services SET ${fields.join(', ')} WHERE id = ?`, params);
-    
+
     return res.json({ message: 'Service updated.' });
   } catch (err) {
     console.error('[services update]', err);
@@ -239,16 +247,16 @@ exports.softDelete = async (req, res, next) => {
 // Returns distinct non-null categories for the filter chips.
 // ─────────────────────────────────────────────────────────────
 exports.getCategories = async (req, res, next) => {
-    try {
-        const [rows] = await pool.execute(
-            `SELECT DISTINCT category
+  try {
+    const [rows] = await pool.execute(
+      `SELECT DISTINCT category
              FROM services
              WHERE is_active = TRUE AND category IS NOT NULL
              ORDER BY category ASC`
-        );
-        const categories = rows.map(r => r.category);
-        return res.status(200).json({ status: 'success', data: categories });
-    } catch (err) {
-        next(err);
-    }
+    );
+    const categories = rows.map(r => r.category);
+    return res.status(200).json({ status: 'success', data: categories });
+  } catch (err) {
+    next(err);
+  }
 };

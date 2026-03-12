@@ -507,3 +507,467 @@ Fix applied: Changed 'u.name' to 'CONCAT(u.first_name, \' \', u.last_name)' in t
     at PromisePoolConnection.execute (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\mysql2\lib\promise\connection.js:47:22)
     at exports.cancelBooking (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\bookingController.js:255:16)
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+[2026-03-10T05:05:48.822Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-10T05:14:47.029Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-10T05:16:39.248Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-10T05:21:41.799Z] POST /api/bookings --> Cannot access 'services' before initialization
+   Stack: ReferenceError: Cannot access 'services' before initialization
+    at exports.createBooking (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\bookingController.js:72:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+[2026-03-10T05:24:39.777Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-11T21:22:57.726Z] POST /api/auth/login --> Invalid email or password
+   Stack: Error: Invalid email or password
+    at exports.login (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\authController.js:165:19)
+
+[2026-03-11T21:23:45.293Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-11T21:31:09.432Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-11T21:44:12.751Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-11T21:49:55.556Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-11T22:07:37.640Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-11T22:24:43.927Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-11T22:27:24.226Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-12T19:49:52.043Z] GET /api/services --> whereConditions is not defined
+   Stack: ReferenceError: whereConditions is not defined
+    at exports.getAll (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\serviceController.js:78:5)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-12T19:49:52.497Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-12T19:49:59.806Z] GET /api/services --> whereConditions is not defined
+   Stack: ReferenceError: whereConditions is not defined
+    at exports.getAll (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\serviceController.js:78:5)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-12T19:50:28.795Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-12T19:50:38.432Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-12T19:50:49.207Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-12T20:33:05.066Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-12T20:40:15.361Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-12T20:40:15.759Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-12T20:41:41.654Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-12T20:42:13.712Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-12T20:42:14.012Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-12T20:42:23.233Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-12T20:44:16.902Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-12T20:48:41.189Z] GET /api/services --> whereConditions is not defined
+   Stack: ReferenceError: whereConditions is not defined
+    at exports.getAll (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\serviceController.js:78:5)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-12T20:48:41.588Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-12T20:48:47.284Z] GET /api/services --> whereConditions is not defined
+   Stack: ReferenceError: whereConditions is not defined
+    at exports.getAll (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\serviceController.js:78:5)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-12T20:51:52.865Z] GET /api/services?category=fun --> whereConditions is not defined
+   Stack: ReferenceError: whereConditions is not defined
+    at exports.getAll (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\serviceController.js:78:5)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-12T20:51:53.688Z] GET /api/services?category=sup --> whereConditions is not defined
+   Stack: ReferenceError: whereConditions is not defined
+    at exports.getAll (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\serviceController.js:78:5)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-12T20:51:54.613Z] GET /api/services --> whereConditions is not defined
+   Stack: ReferenceError: whereConditions is not defined
+    at exports.getAll (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\serviceController.js:78:5)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-12T20:52:01.682Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-12T20:53:26.879Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-12T20:53:49.521Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)
+
+[2026-03-12T20:54:01.390Z] GET /api/notifications --> Route not found: GET /api/notifications
+   Stack: AppError: Route not found: GET /api/notifications
+    at notFound (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\errorMiddleware.js:26:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:342:13)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:688:15
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:276:14)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:60:12)

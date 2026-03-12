@@ -8,10 +8,11 @@
 //             → Flutter sends uid to POST /auth/login
 //             → We find MySQL user, issue JWT with role embedded
 // const pool          = require('../config/db');
+
 const bcrypt = require('bcrypt');             // Password hashing (saltRounds = 12)
 const crypto = require('crypto');             // OTP generation + SHA-256 hashing
 const pool = require('../config/db');         // MySQL connection pool
-// const Email = require('../utils/email');      // Custom email utility (OTP + confirmation)
+const Email = require('../utils/email');      // Custom email utility (OTP + confirmation)
 const { signToken } = require('../utils/jwt');
 
 
@@ -54,32 +55,6 @@ function hashOTP(otp) {
 // Creates a new user — role is always 'user' on self-registration
 // Staff and admin accounts must be created/promoted by an admin.
 // ─────────────────────────────────────────────────────────────
-// exports.register = async (req, res) => {
-//   try {
-//   const { 
-//     // uid, 
-//     name, email, password } = req.body;
-
-//     // !uid     || 
-//   if (
-//     !name || !email || !password) {
-//     return res.status(400).json({ message: 'uid, name, and email are required.' });
-//   }
-
-//     await pool.execute(
-//       'INSERT INTO users (uid, name, email) VALUES (?, ?, ?)',
-//       [uid, name.trim(), email.toLowerCase().trim()]
-//     );
-//     return res.status(201).json({ message: 'User registered successfully.' });
-//   } catch (err) {
-//     if (err.code === 'ER_DUP_ENTRY') {
-//       return res.status(409).json({ message: 'A user with this email already exists.' });
-//     }
-//     console.error('[auth register]', err);
-//     return res.status(500).json({ message: 'Registration failed. Please try again.' });
-//   }
-// };
-
 exports.register = async (req, res, next) => {
     try {
         const { firstName, lastName, email, password } = req.body;
@@ -90,21 +65,7 @@ exports.register = async (req, res, next) => {
             throw new Error('All fields are required: firstName, lastName, email, password');
         }
 
-        // // Step 2: Verify locationCode maps to an active location
-        /* const [locRows] = await pool.query(
-             'SELECT id FROM locations WHERE code = ? AND is_active = 1',
-             [locationCode]
-         );
-
-         if (locRows.length === 0) {
-             res.status(400);
-             throw new Error('Invalid or inactive location code');
-         }
-
-         const location_id = locRows[0].id; // Resolved location ID for the FK
-*/
-        
-        // Step 3: Check for duplicate email — must be unique across users
+        // Step 2: Check for duplicate email — must be unique across users
         const [userRows] = await pool.query(
             'SELECT id FROM users WHERE email = ?',
             [email]
@@ -115,12 +76,12 @@ exports.register = async (req, res, next) => {
             throw new Error('An account with this email already exists');
         }
 
-        // Step 4: Hash the password using bcrypt (saltRounds = 12)
+        // Step 3: Hash the password using bcrypt (saltRounds = 12)
         // bcrypt.hash is async and automatically generates + applies a salt
         // The resulting hash includes the salt — no need to store it separately
         const password_hash = await bcrypt.hash(password, 12);
 
-        // Step 5: Insert the new user — password_hash stored, raw password NEVER persisted
+        // Step 4: Insert the new user — password_hash stored, raw password NEVER persisted
         const [result] = await pool.query(
             `INSERT INTO users (first_name, last_name, email, password_hash, role)
              VALUES (?, ?, ?, ?, 'user')`,
@@ -128,10 +89,10 @@ exports.register = async (req, res, next) => {
             [firstName.trim(), lastName.trim(), email.toLowerCase(), password_hash]
         );
 
-        // Step 6: Generate JWT for immediate login after registration
+        // Step 5: Generate JWT for immediate login after registration
         const token = signToken(result.insertId);
 
-        // Step 7: Return success — NEVER return password_hash in the response
+        // Step 6: Return success — NEVER return password_hash in the response
         res.status(201).json({
             status: 'success',
             message: 'User registered successfully',
@@ -157,39 +118,6 @@ exports.register = async (req, res, next) => {
 // Body: { email, password }
 // Validates credentials, checks account status, returns JWT + fcm_token status
 // ─────────────────────────────────────────────────────────────
-
-// exports.login = async (req, res) => {
-//   const { uid } = req.body;
-
-//   if (!uid) {
-//     return res.status(400).json({ message: 'uid is required.' });
-//   }
-
-//   try {
-//     const [rows] = await pool.execute(
-//       'SELECT id, uid, name, email, role, profile_picture_url FROM users WHERE uid = ?',
-//       [uid]
-//     );
-
-//     if (rows.length === 0) {
-//       return res.status(404).json({ message: 'User not found. Please register first.' });
-//     }
-
-//     const user  = rows[0];
-//     const token = signToken({
-//       id:    user.id,
-//       uid:   user.uid,
-//       email: user.email,
-//       role:  user.role,   // Critical — controls access throughout the app
-//     });
-
-//     return res.json({ token, user });
-//   } catch (err) {
-//     console.error('[auth login]', err);
-//     return res.status(500).json({ message: 'Login failed. Please try again.' });
-//   }
-// };
-
 exports.login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
@@ -352,7 +280,7 @@ exports.forgotPassword = async (req, res, next) => {
         if (userRows.length === 0) {
             return res.status(200).json({
                 status: 'success',
-                message: 'If an active account with that email exists, a reset OTP has been sent',
+                message: 'If an active account with that email exists, a reset code has been sent',
                 data: null
             });
         }
@@ -383,7 +311,7 @@ exports.forgotPassword = async (req, res, next) => {
         await new Email({
             email: user.email,
             fullName,
-            subject: 'Your Password Reset OTP',
+            subject: 'Your Password Reset Code',
             resetCode: otp   // Raw OTP sent to user, never stored
         }).sendPasswordResetEmail();
 
@@ -392,7 +320,7 @@ exports.forgotPassword = async (req, res, next) => {
 
         res.status(200).json({
             status: 'success',
-            message: 'OTP sent to your email address',
+            message: 'Reset code sent to your email address',
             data: null
         });
     } catch (error) {
@@ -413,7 +341,7 @@ exports.resetPassword = async (req, res, next) => {
         // Step 1: Validate all fields present
         if (!email || !otp || !newPassword) {
             res.status(400);
-            throw new Error('Email, OTP, and new password are all required');
+            throw new Error('Email, reset code, and new password are all required');
         }
 
         // Step 2: Fetch user with reset fields — only active accounts
@@ -428,7 +356,7 @@ exports.resetPassword = async (req, res, next) => {
         // Generic error — don't reveal whether account exists
         if (userRows.length === 0) {
             res.status(400);
-            throw new Error('Invalid or expired OTP');
+            throw new Error('Invalid or expired reset');
         }
 
         const user = userRows[0];
@@ -459,7 +387,7 @@ exports.resetPassword = async (req, res, next) => {
 
         if (otpHash !== user.reset_token_hash) {
             res.status(400);
-            throw new Error('Invalid OTP');
+            throw new Error('Invalid reset code');
         }
 
         // Step 6: Valid OTP — hash the new password with bcrypt
