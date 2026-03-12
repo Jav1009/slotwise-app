@@ -13,30 +13,42 @@
 //   FlutterLocalNotificationsPlugin  ← foreground notification display
 //   All providers in MultiProvider   ← unchanged
 //   MaterialApp + Consumer routing   ← unchanged
+//
+// Changes from previous version:
+//   • Added _SplashScreen — shown while tryRestoreSession() runs on cold start
+//   • _sessionChecked flag gates home routing until JWT restore completes
+//   • StaffDashboardScreen now wired (was TODO comment)
+//   • Theme improved: chipTheme + inputDecorationTheme set globally
 
-// import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/material.dart';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+import 'package:flutter/material.dart';
+
 import 'package:provider/provider.dart';
-import 'package:slot_wise_booking/core/constants/app_colors.dart';
 import 'package:slot_wise_booking/providers/admin_provider.dart';
 import 'package:slot_wise_booking/providers/booking_provider.dart';
 import 'package:slot_wise_booking/providers/notification_provider.dart';
 import 'package:slot_wise_booking/providers/service_provider.dart';
 import 'package:slot_wise_booking/providers/auth_provider.dart';
 import 'package:slot_wise_booking/providers/slot_provider.dart';
-import 'package:slot_wise_booking/screens/admin_dashboard_screen.dart';
-import 'package:slot_wise_booking/screens/login_screen.dart';
-import 'package:slot_wise_booking/screens/service_screen.dart';
-import 'package:slot_wise_booking/screens/my_bookings_screen.dart';
-import 'package:slot_wise_booking/screens/splash_screen.dart';
+import 'package:slot_wise_booking/providers/theme_provider.dart';
+
+import 'package:slot_wise_booking/core/navigation/app_navigator.dart';
+import 'package:slot_wise_booking/routes/routes.dart';
 import 'package:slot_wise_booking/firebase_options.dart';
-// import 'package:supabase_flutter/supabase_flutter.dart';
 
-// final SupabaseClient supabase = Supabase.instance.client;
+import 'package:slot_wise_booking/screens/nav/layout_nav.dart';
+import 'package:slot_wise_booking/screens/admin/admin_dashboard_screen.dart';
+import 'package:slot_wise_booking/screens/auth/login_screen.dart';
+import 'package:slot_wise_booking/screens/splash_screen.dart';
+import 'package:slot_wise_booking/screens/staff/staff_dashboard_screen.dart';
 
+// ─────────────────────────────────────────────────────────────
+// Background FCM handler — top-level function required by Firebase
+// ─────────────────────────────────────────────────────────────
 // Background message handler — MUST be a top-level function (not inside a class)
 // Called when app is terminated or in background and a data message arrives
 @pragma('vm:entry-point') // Required for release builds — prevents tree shaking
@@ -113,19 +125,11 @@ void main() async {
     sound: true,
   );
 
-  // Step 2: initialise Supabase (replaces Firebase.initializeApp())
-
-  // Get these values from: Supabase Console Settings API
-
-  // await Supabase.initialize(
-  //   url: 'https://vimzsdqpcteivojreifo.supabase.co',    // Project URL
-  //   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpbXpzZHFwY3RlaXZvanJlaWZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NjUzNTcsImV4cCI6MjA4NzA0MTM1N30.I3PRf-e305Kwy7RDveFDEUPJyeuZds8_zhAwTnKGysw',// anon/public key
-  // );
-
   // Step 3: launch app with providers
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ServiceProvider()),
         ChangeNotifierProvider(create: (_) => SlotProvider()),
@@ -147,22 +151,37 @@ class SlotwiseApp extends StatefulWidget {
 }
 
 class _SlotwiseAppState extends State<SlotwiseApp> {
+  // false while tryRestoreSession() is running → shows SplashScreen
+  bool _sessionChecked = false;
+
   @override
   void initState() {
     super.initState();
-
-    // Try to restore the previous session from secure storage
-    // If a valid JWT exists, AuthProvider sets _user and routes to home screen
-    // If not (expired or first launch), LoginScreen is shown
-    // This runs after the first frame so Provider is available via context
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AuthProvider>().tryRestoreSession();
-    });
-
-    // Set up FCM foreground + tap handlers
-    // Initialize notification listeners after the widget tree is built
     _setupFirebaseMessaging();
+    _restoreSession();
   }
+
+  // Try to restore the previous session from secure storage
+  // If a valid JWT exists, AuthProvider sets _user and routes to home screen
+  // If not (expired or first launch), LoginScreen is shown
+  // This runs after the first frame so Provider is available via context
+  Future<void> _restoreSession() async {
+    final auth = context.read<AuthProvider>();
+    await auth.tryRestoreSession();
+
+    // Apply role-default theme palette after session is known
+    if (auth.user != null) {
+      context.read<ThemeProvider>().applyRoleDefault(auth.user!.role);
+      // Also pre-fetch notifications
+      context.read<NotificationProvider>().fetchNotifications();
+    }
+ 
+    if (mounted) setState(() => _sessionChecked = true);
+  
+  }
+
+  // Set up FCM foreground + tap handlers
+  // Initialize notification listeners after the widget tree is built
 
   void _setupFirebaseMessaging() {
     // ── FOREGROUND messages ───────────────────────────────────────────────────
@@ -216,50 +235,47 @@ class _SlotwiseAppState extends State<SlotwiseApp> {
         // Navigate to the bookings screen
         // Use your navigator key or router here
         print('Navigate to booking: $bookingId');
+        AppNavigator.key.currentState?.pushNamed('/my-bookings');
         break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Read ThemeProvider — rebuilds when theme changes
+    final tp = context.watch<ThemeProvider>();
+
     return MaterialApp(
       title: 'SlotWise',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 48),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+      // ── Required for ApiService 401 handler ───────────────
+      // Gives ApiService's interceptor access to Navigator and
+      // ScaffoldMessenger without needing a BuildContext.
+      navigatorKey: AppNavigator.key,
+
+      // ── Theme wiring ─────────────────────────────────────
+      theme:     tp.isDark ? null : tp.currentThemeData,
+      darkTheme: tp.isDark ? tp.currentThemeData : null,
+      themeMode: tp.themeMode,
+
+      // ── Route handling ────────────────────────────────────
+      // All routes are defined centrally in AppRouter.
+      // Use AppRoutes.* constants + AppNav extension methods to navigate.
+      onGenerateRoute: AppRouter.onGenerateRoute,
+      initialRoute: AppRoutes.splash,
+      
+      // ── Home routing ──────────────────────────────────────
+      // Splash while JWT restore runs → then role-based home
+      home: !_sessionChecked
+          ? const SplashScreen()
+          : Consumer<AuthProvider>(
+              builder: (_, auth, __) {
+                if (!auth.isLoggedIn) return const LoginScreen();
+                if (auth.isAdmin)     return const AdminDashboardScreen();
+                if (auth.isStaff)     return const StaffDashboardScreen();
+                return const CustomerShell();  // ← NEW: shell with PageView
+              },
             ),
-          ),
-        ),
-      ),
-      // Decide initial screen based on auth state
-      // Named routes are used in a few places (profile screen, notifications, etc.)
-      // so register them here.  We keep home logic separate since initial screen
-      // decision depends on auth state.
-      routes: {
-        '/my-bookings': (_) => const MyBookingsScreen(),
-        // future named routes can go here
-      },
-      // home: Consumer<AuthProvider>(
-      //   builder: (context, authProvider, _) {
-      //     if (!authProvider.isLoggedIn) return const LoginScreen();
-      //     if (authProvider.isAdmin) return const AdminDashboardScreen();
-      //     return const ServicesScreen();
-      //   },
-      // ),
-      home: SplashScreen(),
     );
   }
 }

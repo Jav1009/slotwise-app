@@ -10,9 +10,6 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # supabase
-  supabase_flutter: ^2.12.0
-  
   # ── Firebase ────────────────────────────────────────────────
   # firebase_core MUST be listed before all other Firebase packages
   # It bootstraps the Firebase connection at app startup

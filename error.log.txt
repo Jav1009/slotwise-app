@@ -2,3 +2,8 @@
 [2026-03-05] Update: Fix applied successfully. Flutter analyze shows no compilation errors related to onTokenRefresh.
 [2026-03-05] Error: Gradle build failed due to flutter_local_notifications requiring core library desugaring. Fixed by enabling isCoreLibraryDesugaringEnabled = true in compileOptions and adding coreLibraryDesugaring dependency in android/app/build.gradle.kts.
 [2026-03-05] Error: Null check operator used on a null value in ProfileScreen when accessing auth.user. Added guard and fallback UI to prevent crash.
+[2026-03-09] Error: The method 'tryRestoreSession' isn't defined for the type 'AuthProvider' in main.dart and splash_screen.dart. Fixed by adding tryRestoreSession method to AuthProvider that restores user session from stored token.
+[2026-03-09] Error: The getter 'appState' isn't defined for the type 'AuthProvider', and 'AppState' is undefined in splash_screen.dart. Fixed by adding AppState enum and appState getter to AuthProvider.
+[2026-03-09] Error: The getter 'name' isn't defined for the type 'UserModel' in profile_screen.dart. Fixed by replacing user.name with user.fullName.
+[2026-03-09] Update: Removed unused imports (admin_dashboard_screen.dart, login_screen.dart, service_screen.dart) from main.dart to fix warnings.
+[2026-03-09] Update: Flutter analyze now shows no errors, only warnings and infos. Main connection between main.dart and splash_screen.dart is established via home: SplashScreen().

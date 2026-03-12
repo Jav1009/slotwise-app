@@ -7,6 +7,12 @@
 //   JWT and injects it as an Authorization header on every API call.
 //   Without this, we'd have to remember to add the header in every single
 //   controller method — error-prone and repetitive.
+//
+// Changes:
+//   • Added: postFormData(path, FormData) — used by ImageUploadService
+//   • All existing methods (get, post, put, delete) unchanged
+//   • Error logging unchanged
+
 import 'package:dio/dio.dart';
 import 'package:slot_wise_booking/core/constants/api_constants.dart';
 import 'storage_service.dart';
@@ -55,4 +61,18 @@ class ApiService {
 
   Future<Response> delete(String path) =>
       _dio.delete(path);
+
+  // ── Multipart upload ──────────────────────────────────────
+  // Used by ImageUploadService for profile picture and service image uploads.
+  // Dio automatically sets Content-Type: multipart/form-data when FormData is passed.
+  Future<Response> postFormData(String path, FormData formData) =>
+      _dio.post(
+        path,
+        data: formData,
+        options: Options(
+          // Override the default application/json content-type
+          // Dio sets boundary automatically for multipart
+          contentType: 'multipart/form-data',
+        ),
+      );
 }

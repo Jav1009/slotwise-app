@@ -5,7 +5,6 @@
 
 
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:dio/dio.dart';
 import 'api_service.dart';    // Your existing Dio + JWT interceptor service
 
 class NotificationService {

@@ -1,4 +1,9 @@
 // features/admin/providers/admin_provider.dart
+//
+// Changes:
+//   • fetchDashboardData: reads res.data['data'] (new consistent response shape)
+//   • updateBookingStatus: unchanged
+
 import 'package:flutter/material.dart';
 import 'package:slot_wise_booking/models/booking_model.dart';
 import 'package:slot_wise_booking/services/api_service.dart';
@@ -24,7 +29,10 @@ class AdminProvider extends ChangeNotifier {
       final dateStr = '${today.year}-${today.month.toString().padLeft(2,'0')}-${today.day.toString().padLeft(2,'0')}';
       final res = await _api.get(ApiConstants.bookings, params: {'date': dateStr});
 
-      _allBookings = (res.data as List)
+      // Accept both { data: [...] } and legacy plain array
+      final list = (res.data is Map ? res.data['data'] : res.data) as List;
+      
+      _allBookings = list
           .map((j) => BookingModel.fromJson(j as Map<String, dynamic>))
           .toList();
 

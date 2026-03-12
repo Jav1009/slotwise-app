@@ -1,136 +1,95 @@
-// ============================================================
-// FILE: lib/features/auth/providers/auth_provider.dart
+// lib/features/auth/providers/auth_provider.dart
 //
-// CHANGES FROM PREVIOUS VERSION:
-//   - Removed ALL Supabase imports and calls
-//   - Added AppState enum (loading | authenticated | unauthenticated)
-//   - Added tryRestoreSession() — reads stored JWT, calls GET /auth/me
-//     to silently restore the session on app start
-//   - login/register now call AuthService directly (bcrypt + JWT)
-//   - logout clears FCM token, calls backend, wipes local JWT
+// Full rewrite — removed Supabase entirely.
+// Auth is now handled purely by the Node.js backend (bcrypt + JWT).
 //
-// HOW AUTH STATE PERSISTENCE WORKS:
-//   On every app start, SplashScreen calls tryRestoreSession().
-//   That method checks flutter_secure_storage for a saved JWT.
-//   If found → calls GET /api/auth/me to verify it's still valid.
-//   If valid → sets _appState = AppState.authenticated → app routes to home.
-//   If invalid/expired → deletes token → sets unauthenticated → LoginScreen.
-//   This means users stay logged in between sessions automatically.
+// REGISTER flow:
+//   POST /api/auth/register { firstName, lastName, email, password }
+//   → Backend hashes password, inserts user, returns JWT + user object
+//   → We store JWT in secure storage + set _user state
 //
-// FLOW SUMMARY:
-//   App cold start
-//     → SplashScreen shown (2s minimum for brand feel)
-//     → tryRestoreSession() runs concurrently
-//     → AppState.loading → .authenticated OR .unauthenticated
-//     → SplashScreen listens and navigates to correct screen
-// ============================================================
+// LOGIN flow:
+//   POST /api/auth/login { email, password }
+//   → Backend verifies bcrypt hash, returns JWT + user object
+//   → We store JWT + update FCM token
+//
+// LOGOUT flow:
+//   POST /api/auth/logout (protected)
+//   → Backend clears FCM token in DB
+//   → We delete JWT from storage, clear _user state
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:slot_wise_booking/models/user_model.dart';
-import 'package:slot_wise_booking/services/auth_service.dart';
+import 'package:slot_wise_booking/services/api_service.dart';
 import 'package:slot_wise_booking/services/notification_service.dart';
+import 'package:slot_wise_booking/services/storage_service.dart';
 
-// Represents the three possible states the app can be in at startup
-enum AppState {
-  loading,          // tryRestoreSession() in progress — splash screen showing
-  authenticated,    // Valid JWT + user loaded — route to home screen
-  unauthenticated,  // No JWT or expired — route to LoginScreen
-}
+// enum AppState { authenticated, unauthenticated }
 
 class AuthProvider extends ChangeNotifier {
-  // ── State ─────────────────────────────────────────────────────────
-  UserModel?  _user;
-  AppState    _appState     = AppState.loading; // Starts as loading — splash shows
-  bool        _isLoading    = false;            // For login/register button spinners
-  String?     _errorMessage;
+  // ── State ──────────────────────────────────────────────────
+  UserModel? _user;
+  bool _isLoading = false;
+  String? _errorMessage;
 
-  // ── Getters ───────────────────────────────────────────────────────
-  UserModel? get user         => _user;
-  AppState   get appState     => _appState;
-  bool       get isLoggedIn   => _appState == AppState.authenticated;
-  bool       get isAdmin      => _user?.isAdmin ?? false;
-  bool       get isLoading    => _isLoading;
-  String?    get errorMessage => _errorMessage;
+  // ── Getters ────────────────────────────────────────────────
+  UserModel? get user => _user;
+  bool get isLoggedIn => _user != null;
+  bool get isAdmin => _user?.isAdmin ?? false;
+  bool get isStaff => _user?.isStaff ?? false;
+  bool get isStaffOrAdmin => _user?.isStaffOrAdmin ?? false;
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+  // AppState get appState =>
+  //     _user != null ? AppState.authenticated : AppState.unauthenticated;
 
-  // ── Restore session on app start ──────────────────────────────────
-  // Called ONCE by SplashScreen immediately after it mounts.
-  //
-  // Steps:
-  //   1. Read JWT from flutter_secure_storage (instant, no network)
-  //   2. No JWT → unauthenticated → LoginScreen
-  //   3. JWT found → GET /api/auth/me to verify it's still valid
-  //   4. Valid → populate _user, set authenticated → Home screen
-  //   5. 401 / expired → delete stale token → unauthenticated → LoginScreen
-  //   6. Network error + token exists → stay authenticated (offline grace)
-  // ──────────────────────────────────────────────────────────────────
+  final ApiService _api = ApiService();
+
+  // ── TRY RESTORE SESSION ────────────────────────────────────
   Future<void> tryRestoreSession() async {
     try {
-      final hasToken = await AuthService.isLoggedIn();
+      final token = await StorageService.getToken();
+      if (token == null) return;
 
-      if (!hasToken) {
-        _appState = AppState.unauthenticated;
-        notifyListeners();
-        return;
-      }
-
-      // Token found — verify with the server
-      final result = await AuthService.getMe();
-
-      if (result.success && result.user != null) {
-        _user = UserModel(
-          id:    result.user!.id,
-          uid:   '',
-          name:  result.user!.fullName,
-          email: result.user!.email,
-          role:  result.user!.role,
-        );
-        _appState = AppState.authenticated;
-        // Restart the FCM token refresh listener (doesn't survive app restarts)
-        NotificationService().listenForTokenRefresh();
-      } else {
-        // Token expired or rejected — clear it
-        await AuthService.deleteToken();
-        _appState = AppState.unauthenticated;
-      }
-    } catch (_) {
-      // Network unreachable — be lenient. If they have a token, show home.
-      // API calls will fail with 401 if it's actually invalid — that's fine.
-      final hasToken = await AuthService.isLoggedIn();
-      _appState = hasToken ? AppState.authenticated : AppState.unauthenticated;
-    } finally {
+      // Validate token by fetching user data
+      final res = await _api.get('/auth/me');
+      _user = UserModel.fromJson(res.data['data'] as Map<String, dynamic>);
       notifyListeners();
+    } catch (e) {
+      // If token is invalid, delete it
+      await StorageService.deleteToken();
     }
   }
 
-  // ── Login ─────────────────────────────────────────────────────────
+  // ── LOGIN ──────────────────────────────────────────────────
   Future<bool> login(String email, String password) async {
     _setLoading(true);
-    _errorMessage = null;
     try {
-      final result = await AuthService.login(
-        email: email.trim(),
-        password: password,
-      );
+      final res = await _api.post('/auth/login', {
+        'email': email.trim(),
+        'password': password,
+      });
 
-      if (result.success && result.user != null) {
-        _user = UserModel(
-          id:    result.user!.id,
-          uid:   '',
-          name:  result.user!.fullName,
-          email: result.user!.email,
-          role:  result.user!.role,
-        );
-        _appState = AppState.authenticated;
-        NotificationService().listenForTokenRefresh();
-        notifyListeners();
-        return true;
-      }
+      final data = res.data['data'] as Map<String, dynamic>;
+      final token = data['token'] as String;
 
-      _errorMessage = result.message ?? 'Login failed.';
+      await StorageService.saveToken(token);
+      _user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
+      _errorMessage = null;
+      notifyListeners();
+
+      // Register FCM token with backend after successful login
+      await NotificationService().registerToken();
+      NotificationService().listenForTokenRefresh();
+
+      return true;
+    } on DioException catch (e) {
+      _errorMessage = _extractError(e);
       notifyListeners();
       return false;
-    } catch (_) {
-      _errorMessage = 'An unexpected error occurred. Please try again.';
+    } catch (e) {
+      _errorMessage = 'Login failed. Check your connection.';
       notifyListeners();
       return false;
     } finally {
@@ -138,43 +97,40 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // ── Register ──────────────────────────────────────────────────────
-  // RegisterScreen calls: auth.register(name, email, password)
-  // We split the single name field on the first space.
-  Future<bool> register(String name, String email, String password) async {
+  // ── REGISTER ───────────────────────────────────────────────
+  Future<bool> register({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String password,
+  }) async {
     _setLoading(true);
-    _errorMessage = null;
     try {
-      final parts     = name.trim().split(' ');
-      final firstName = parts.first;
-      final lastName  = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+      final res = await _api.post('/auth/register', {
+        'firstName': firstName.trim(),
+        'lastName': lastName.trim(),
+        'email': email.trim(),
+        'password': password,
+      });
 
-      final result = await AuthService.register(
-        firstName: firstName,
-        lastName:  lastName,
-        email:     email.trim(),
-        password:  password,
-      );
+      final data = res.data['data'] as Map<String, dynamic>;
+      final token = data['token'] as String;
 
-      if (result.success && result.user != null) {
-        _user = UserModel(
-          id:    result.user!.id,
-          uid:   '',
-          name:  result.user!.fullName,
-          email: result.user!.email,
-          role:  result.user!.role,
-        );
-        _appState = AppState.authenticated;
-        NotificationService().listenForTokenRefresh();
-        notifyListeners();
-        return true;
-      }
+      await StorageService.saveToken(token);
+      _user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
+      _errorMessage = null;
+      notifyListeners();
 
-      _errorMessage = result.message ?? 'Registration failed.';
+      await NotificationService().registerToken();
+      NotificationService().listenForTokenRefresh();
+
+      return true;
+    } on DioException catch (e) {
+      _errorMessage = _extractError(e);
       notifyListeners();
       return false;
-    } catch (_) {
-      _errorMessage = 'An unexpected error occurred. Please try again.';
+    } catch (e) {
+      _errorMessage = 'Registration failed. Try again.';
       notifyListeners();
       return false;
     } finally {
@@ -182,18 +138,59 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // ── Logout ────────────────────────────────────────────────────────
+  // ── LOGOUT ─────────────────────────────────────────────────
   Future<void> logout() async {
-    await NotificationService().unregisterToken(); // Delete FCM token from Firebase
-    await AuthService.logout();                    // Backend clears fcm_token + delete JWT
-    _user     = null;
-    _appState = AppState.unauthenticated;
+    try {
+      // Tell backend to clear FCM token (fire-and-forget — don't block logout on failure)
+      await _api.post('/auth/logout', {});
+    } catch (_) {}
+
+    await StorageService.deleteToken();
+    _user = null;
     notifyListeners();
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────
+  // ── REFRESH USER (after profile edit) ─────────────────────
+  Future<void> refreshUser() async {
+    try {
+      final res = await _api.get('/auth/me');
+      _user = UserModel.fromJson(res.data['data'] as Map<String, dynamic>);
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  // ── UPDATE USER IN STATE (without API call) ────────────────
+  // Used after local edits (e.g., profile picture updated)
+  void updateUserState(UserModel updated) {
+    _user = updated;
+    notifyListeners();
+  }
+
+  // ── HELPERS ────────────────────────────────────────────────
   void _setLoading(bool v) {
     _isLoading = v;
     notifyListeners();
+  }
+
+  /// Extracts a user-friendly message from a DioException.
+  /// Reads the backend's JSON error body when available.
+  String _extractError(DioException e) {
+    final statusCode = e.response?.statusCode;
+    final message = e.response?.data?['message'] as String?;
+
+    if (message != null && message.isNotEmpty) return message;
+
+    switch (statusCode) {
+      case 400:
+        return 'Please check all fields and try again.';
+      case 401:
+        return 'Incorrect email or password.';
+      case 403:
+        return 'Your account has been deactivated. Contact support.';
+      case 409:
+        return 'An account with this email already exists.';
+      default:
+        return 'Something went wrong. Check your connection.';
+    }
   }
 }

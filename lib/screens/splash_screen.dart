@@ -24,9 +24,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:slot_wise_booking/providers/auth_provider.dart';
-import 'package:slot_wise_booking/screens/login_screen.dart';
-import 'package:slot_wise_booking/screens/admin_dashboard_screen.dart';
-import 'package:slot_wise_booking/screens/service_screen.dart';
+import 'package:slot_wise_booking/screens/auth/login_screen.dart';
+import 'package:slot_wise_booking/screens/admin/admin_dashboard_screen.dart';
+import 'package:slot_wise_booking/screens/customer/service_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -122,7 +122,7 @@ class _SplashScreenState extends State<SplashScreen>
     authProvider.tryRestoreSession().then((_) {
       if (mounted) {
         setState(() => _sessionCheckDone = true);
-        _maybeNavigate();
+        // _maybeNavigate();
       }
     });
 
@@ -147,39 +147,39 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
     setState(() => _minTimeDone = true);
-    _maybeNavigate();
+    // _maybeNavigate();
   }
 
   // Only navigate when BOTH conditions are true
-  void _maybeNavigate() {
-    if (!_sessionCheckDone || !_minTimeDone) return;
-    if (!mounted) return;
-
-    final auth = context.read<AuthProvider>();
-
-    Widget destination;
-    if (auth.appState == AppState.authenticated) {
-      destination = auth.isAdmin
-          ? const AdminDashboardScreen()
-          : const ServicesScreen();
-    } else {
-      destination = const LoginScreen();
-    }
-
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder:    (_, __, ___) => destination,
-        // Smooth fade transition out of splash
-        transitionsBuilder: (_, animation, __, child) {
-          return FadeTransition(
-            opacity: CurvedAnimation(parent: animation, curve: Curves.easeIn),
-            child: child,
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 400),
-      ),
-    );
-  }
+  // void _maybeNavigate() {
+  //   if (!_sessionCheckDone || !_minTimeDone) return;
+  //   if (!mounted) return;
+//
+  //   final auth = context.read<AuthProvider>();
+//
+  //   Widget destination;
+  //   if (auth.appState == AppState.authenticated) {
+  //     destination = auth.isAdmin
+  //         ? const AdminDashboardScreen()
+  //         : const ServicesScreen();
+  //   } else {
+  //     destination = const LoginScreen();
+  //   }
+//
+  //   Navigator.of(context).pushReplacement(
+  //     PageRouteBuilder(
+  //       pageBuilder:    (_, __, ___) => destination,
+  //       // Smooth fade transition out of splash
+  //       transitionsBuilder: (_, animation, __, child) {
+  //         return FadeTransition(
+  //           opacity: CurvedAnimation(parent: animation, curve: Curves.easeIn),
+  //           child: child,
+  //         );
+  //       },
+  //       transitionDuration: const Duration(milliseconds: 400),
+  //     ),
+  //   );
+  // }
 
   @override
   void dispose() {

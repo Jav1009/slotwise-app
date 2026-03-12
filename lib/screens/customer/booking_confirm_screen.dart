@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:slot_wise_booking/models/service_model.dart';
 import 'package:slot_wise_booking/models/slot_model.dart';
-import '../providers/booking_provider.dart';
+import '../../providers/booking_provider.dart';
 import 'my_bookings_screen.dart';
 
 class BookingConfirmScreen extends StatefulWidget {

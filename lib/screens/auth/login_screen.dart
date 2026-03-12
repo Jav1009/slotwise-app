@@ -1,7 +1,12 @@
 // features/auth/screens/login_screen.dart
+//
+// Changes:
+//   • Added 'Forgot Password?' link → ForgotPasswordScreen
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
+import 'package:slot_wise_booking/screens/auth/forgot_password_screen.dart';
+import '../../providers/auth_provider.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -97,7 +102,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 24),
+                  // Forgot password link
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const ForgotPasswordScreen())),
+                      child: const Text('Forgot password?'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
 
                   // Login button
                   ElevatedButton(
