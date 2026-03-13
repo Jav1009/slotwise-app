@@ -4,6 +4,13 @@
 //   • Card is now tappable → navigates to BookingDetailScreen
 //   • Added Reschedule button on upcoming bookings (alongside Cancel)
 //   • Pull-to-refresh present on all tabs
+//   • 4 tabs: Upcoming | Past | Cancelled | Missed
+//   • Date displayed as "Mar 12, 2026" (uses booking_model.displayDate)
+//   • Category shows "No category" instead of "null"
+//   • Live refresh: polls every 30s via Timer, also refreshes on resume
+//   • isOverdue bookings are shown in Missed tab with grey styling
+
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -21,19 +28,34 @@ class MyBookingsScreen extends StatefulWidget {
 }
 
 class _MyBookingsScreenState extends State<MyBookingsScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final TabController _tabs;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _tabs = TabController(length: 3, vsync: this);
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) =>
         context.read<BookingProvider>().fetchMyBookings());
+    // Poll every 30 seconds for new state
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) => _refresh());
   }
 
   @override
-  void dispose() { _tabs.dispose(); super.dispose(); }
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Refresh when app comes back to foreground
+    if (state == AppLifecycleState.resumed) _refresh();
+  }
+ 
+  void _refresh() {
+    if (mounted) context.read<BookingProvider>().fetchMyBookings();
+  }
+
+  @override
+  void dispose() { _tabs.dispose(); _refreshTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this); super.dispose(); }
 
   Future<void> _showCancelDialog(int bookingId) async {
     final confirm = await showDialog<bool>(
@@ -100,7 +122,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
                   name:            items[i].serviceName,
                   durationMinutes: 0,
                   price:           items[i].price,
-                  category:        items[i].category!,
+                  category:        items[i].displayCategory,
                   isActive:        true,
                 ),
               ),
@@ -121,7 +143,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
           indicatorColor: Colors.white,
-          tabs: const [Tab(text: 'Upcoming'), Tab(text: 'Past'), Tab(text: 'Cancelled')],
+          tabs: const [Tab(text: 'Upcoming'), Tab(text: 'Past'), Tab(text: 'Cancelled'), Tab(text: 'Missed'),],
         ),
       ),
       body: Consumer<BookingProvider>(
@@ -133,6 +155,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
               _buildList(prov.upcoming,  true),
               _buildList(prov.past,      false),
               _buildList(prov.cancelled, false),
+              _buildList(prov.missed,    false),
             ],
           );
         },
@@ -181,7 +204,7 @@ class _BookingCard extends StatelessWidget {
               ]),
               const SizedBox(height: 8),
 
-              // Date/time
+              // Date — formatted "Mar 12, 2026 at 09:20"
               Row(children: [
                 const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
                 const SizedBox(width: 6),
@@ -194,7 +217,7 @@ class _BookingCard extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1A5276))),
               
               // Category
-              Text('Category: ${booking.category}',
+              Text('Category: ${booking.displayCategory}',
                 style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1A5276))),
               
               // Notes

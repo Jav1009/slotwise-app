@@ -29,6 +29,7 @@ class AppColors {
   static const Color confirmed  = Color(0xFF42A5F5);
   static const Color completed  = Color(0xFF66BB6A);
   static const Color cancelled  = Color(0xFFEF5350);
+  static const Color missed     = Color(0xFF9E9E9E); // grey — appointment passed
 
   // Backgrounds
   static const Color lightBlue  = Color(0xFFD6EAF8);
@@ -40,8 +41,17 @@ class AppColors {
   static const Color textMid    = Color(0xFF666666);
   static const Color textLight  = Color(0xFF999999);
 
-  static Color statusColor(String status) => AppTheme.statusColor(status);
-
+  // static Color statusColor(String status) => AppTheme.statusColor(status);
+  static Color statusColor(String status) {
+    switch (status) {
+      case 'pending':   return pending;
+      case 'confirmed': return confirmed;
+      case 'completed': return completed;
+      case 'cancelled': return cancelled;
+      case 'missed':    return missed;
+      default:          return textMid;
+    }
+  }
   // ── Convenience: get SlotWiseColors from context ──────────
   static SlotWiseColors of(BuildContext context) =>
       Theme.of(context).extension<SlotWiseColors>() ??

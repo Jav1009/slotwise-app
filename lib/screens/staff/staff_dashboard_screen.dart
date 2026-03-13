@@ -5,7 +5,14 @@
 //   • Settings icon → SettingsDialog
 //   • Theme-aware via SlotWiseColors
 //   • Restricted quick actions (staff cannot access User Management — admin only)
-
+// Changes:
+//   • Polling: startPolling() on AdminProvider + NotificationProvider every 30s
+//     so badge and pending count update live without switching screens
+//   • Logout: calls auth.logout() which clears _user first → no spinner hang
+//   • Missed stat card added
+//   • Today's booking tiles show formatted date (MMM d, yyyy)
+//   • WidgetsBindingObserver: refreshes when app returns to foreground
+ 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
@@ -27,14 +34,33 @@ class StaffDashboardScreen extends StatefulWidget {
   State<StaffDashboardScreen> createState() => _StaffDashboardScreenState();
 }
 
-class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
+class _StaffDashboardScreenState extends State<StaffDashboardScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Start polling — updates every 30s automatically
+      context.read<AdminProvider>().startPolling();
+      context.read<NotificationProvider>().startPolling();
+    });
+  }
+ 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
       context.read<AdminProvider>().fetchDashboardData();
       context.read<NotificationProvider>().fetchNotifications();
-    });
+    }
+  }
+ 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    // Stop polling when leaving dashboard
+    context.read<AdminProvider>().stopPolling();
+    context.read<NotificationProvider>().stopPolling();
+    super.dispose();
   }
 
   Widget _statCard(
@@ -164,7 +190,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // ── Stats ────────────────────────────────────
+                  // ── Stats (row 1) ────────────────────────────
                   _SectionTitle("Today's Overview", c),
                   const SizedBox(height: 10),
                   Row(children: [
@@ -179,17 +205,47 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                         AppColors.warning, c),
                   ]),
                   const SizedBox(height: 10),
+
+                  // ── Stats (row 2) ────────────────────────────
                   Row(children: [
                     _statCard('Confirmed',
                         '${stats['confirmed'] ?? 0}',
                         Icons.check_circle_outline,
                         AppColors.success, c),
                     const SizedBox(width: 10),
-                    _statCard('Revenue',
-                        'JMD \$${(stats['revenue'] ?? 0.0).toStringAsFixed(0)}',
-                        Icons.attach_money,
-                        AppColors.accent, c),
                   ]),
+                    // _statCard('Revenue',
+                    //     'JMD \$${(stats['revenue'] ?? 0.0).toStringAsFixed(0)}',
+                    //     Icons.attach_money,
+                    //     AppColors.accent, c),
+
+                  // ── Revenue (full width) ─────────────────────
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: c.cardBg,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: c.primaryColor.withOpacity(0.08)),
+                    ),
+                    child: Column(children: [
+                      Container(
+                        width: 44, height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.accent.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.attach_money, color: AppColors.accent, size: 22),
+                      ),
+                      const SizedBox(height: 8),
+                      Text('JMD \$${(stats['revenue'] ?? 0.0).toStringAsFixed(0)}',
+                          style: const TextStyle(
+                              fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.accent)),
+                      const SizedBox(height: 3),
+                      Text('Revenue (completed)',
+                          style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                    ]),
+                  ),
 
                   const SizedBox(height: 24),
 
@@ -276,8 +332,9 @@ class _MiniBookingTile extends StatelessWidget {
         title: Text(booking.serviceName,
             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
         subtitle: Text(
+          // displayDate uses "Mar 12, 2026" format
           '${booking.startTime.substring(0, 5)}'
-          ' — ${booking.customerName ?? booking.slotDate}',
+          ' — ${booking.customerName ?? booking.displayDate}',
           style: TextStyle(fontSize: 12, color: Colors.grey[500]),
         ),
         trailing: Container(

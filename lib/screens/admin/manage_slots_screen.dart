@@ -58,6 +58,7 @@ class _ManageSlotsScreenState extends State<ManageSlotsScreen> {
   ServiceModel?        _selectedService;
   DateTime             _selectedDate    = DateTime.now();
   List<_SlotItem>      _slots           = [];
+  final Set<String>   _selectedTimes   = {};
   bool                 _loading         = false;
   bool                 _servicesLoading = true;
 
@@ -71,12 +72,17 @@ class _ManageSlotsScreenState extends State<ManageSlotsScreen> {
         ApiConstants.services,
         params: {'include_inactive': 'true'},
       );
-      final list = (res.data is Map ? res.data['data'] ?? res.data : res.data) as List;
+      if (!mounted) return;
+      // API returns { status: 'success', data: [...] }
+      final list = (res.data is Map) 
+          ? (res.data['data'] as List)
+          : (res.data as List);
       setState(() {
         _services        = list.map((j) => ServiceModel.fromJson(j)).toList();
         _servicesLoading = false;
       });
     } catch (_) {
+      if (!mounted) return;
       setState(() => _servicesLoading = false);
     }
   }
@@ -91,12 +97,15 @@ class _ManageSlotsScreenState extends State<ManageSlotsScreen> {
     try {
       // Primary: request ALL slots for this service + date
       // Sending both 'date' and 'slot_date' for backend compatibility
+      // all=true -> returns booked/unavailable slots too (shown greyed out)
       final res = await _api.get(ApiConstants.slots, params: {
         'service_id': _selectedService!.id.toString(),
         'date':       dateStr,
         'slot_date':  dateStr,   // some backends use this key
         'all':        'true',    // include booked slots
       });
+
+      if (!mounted) return;
 
       final raw = res.data is Map
           ? (res.data['data'] ?? res.data['slots'] ?? res.data)
@@ -260,9 +269,10 @@ class _ManageSlotsScreenState extends State<ManageSlotsScreen> {
                     items: _services.map((s) => DropdownMenuItem(
                       value: s,
                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Expanded(child: Text(s.name)),
-                          if (!s.isActive)
+                          Flexible(child: Text(s.name, overflow: TextOverflow.ellipsis)),
+                          if (!s.isActive) ...[
                             Container(
                               margin: const EdgeInsets.only(left: 6),
                               padding: const EdgeInsets.symmetric(
@@ -275,7 +285,7 @@ class _ManageSlotsScreenState extends State<ManageSlotsScreen> {
                                   style: TextStyle(
                                       fontSize: 9, color: Colors.orange)),
                             ),
-                        ],
+                        ],]
                       ),
                     )).toList(),
                     onChanged: (s) {

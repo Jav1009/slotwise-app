@@ -1,5 +1,6 @@
 // features/bookings/screens/booking_confirm_screen.dart
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:slot_wise_booking/models/service_model.dart';
 import 'package:slot_wise_booking/models/slot_model.dart';
@@ -19,6 +20,20 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
 
   @override
   void dispose() { _notesCtrl.dispose(); super.dispose(); }
+
+  /// Format slot date → "March 13, 2026"
+  String get _formattedDate {
+    try {
+      final d = DateFormat('yyyy-MM-dd').parse(widget.slot.slotDate);
+      return DateFormat('MMMM d, yyyy').format(d);
+    } catch (_) {
+      return widget.slot.slotDate;
+    }
+  }
+ 
+  /// Format current wall-clock time → "10:14 AM" (when user taps Confirm)
+  /// The timeSLOT itself is shown separately.
+  String get _bookingTime => DateFormat('hh:mm a').format(DateTime.now());
 
   Future<void> _confirm() async {
     final prov = context.read<BookingProvider>();
@@ -62,6 +77,7 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
   @override
   Widget build(BuildContext context) {
     final isLoading = context.watch<BookingProvider>().isLoading;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Confirm Booking')),
       body: SingleChildScrollView(
@@ -76,15 +92,24 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    _infoRow(Icons.cut,      'Service',  widget.service.name),
-                    _infoRow(Icons.calendar_today, 'Date', widget.slot.slotDate),
-                    _infoRow(Icons.access_time,   'Time', widget.slot.displayTime),
-                    _infoRow(Icons.attach_money,  'Price', widget.service.formattedPrice),
+                    _infoRow(Icons.design_services_outlined, 'Service',  widget.service.name),
+                    const Divider(height: 1),
+                    // Date row — formatted "March 13, 2026"
+                    _infoRow(Icons.calendar_today_outlined,  'Date',     _formattedDate),
+                    const Divider(height: 1),
+                    // Timeslot row — the selected appointment window
+                    _infoRow(Icons.schedule_outlined,        'Timeslot', widget.slot.displayTime),
+                    const Divider(height: 1),
+                    // Booking time — wall clock at moment of confirmation
+                    _infoRow(Icons.access_time_outlined,     'Booked at', _bookingTime),
+                    const Divider(height: 1),
+                    _infoRow(Icons.attach_money,             'Price',    widget.service.formattedPrice),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 20),
+
             // Notes
             TextField(
               controller: _notesCtrl,
@@ -96,8 +121,14 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
               ),
             ),
             const SizedBox(height: 24),
+
+            // ── Confirm button ────────────────────────────────
             ElevatedButton(
               onPressed: isLoading ? null : _confirm,
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 52),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
               child: isLoading
                   ? const SizedBox(height: 20, width: 20,
                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))

@@ -3,6 +3,11 @@
 // Changes:
 //   • fetchDashboardData: reads res.data['data'] (new consistent response shape)
 //   • updateBookingStatus: unchanged
+//     Today's Bookings stat still shows today only; Pending/Confirmed count all dates.
+//   • Added: missed count in stats
+//   • Polling: startPolling() / stopPolling() for live dashboard refresh
+ 
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:slot_wise_booking/models/booking_model.dart';
@@ -11,36 +16,67 @@ import '../core/constants/api_constants.dart';
 
 class AdminProvider extends ChangeNotifier {
   List<BookingModel> _allBookings = [];
+  List<BookingModel>   _todayBookings = [];
   Map<String, dynamic> _stats    = {};
   bool   _isLoading = false;
   String? _error;
+  Timer? _pollTimer;
 
   List<BookingModel>   get allBookings => _allBookings;
+  List<BookingModel>   get todayBookings => _todayBookings;
   Map<String, dynamic> get stats       => _stats;
   bool                 get isLoading   => _isLoading;
 
   final _api = ApiService();
 
+  // ── POLLING ────────────────────────────────────────────────
+  void startPolling() {
+    _pollTimer?.cancel();
+    fetchDashboardData();
+    _pollTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      fetchDashboardData();
+    });
+  }
+ 
+  void stopPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
+  }
+ 
+  @override
+  void dispose() {
+    stopPolling();
+    super.dispose();
+  }
+ 
+  // ── FETCH DASHBOARD DATA ───────────────────────────────────
   Future<void> fetchDashboardData() async {
     _isLoading = true; notifyListeners();
     try {
       // Fetch today's bookings for dashboard stats
       final today = DateTime.now();
       final dateStr = '${today.year}-${today.month.toString().padLeft(2,'0')}-${today.day.toString().padLeft(2,'0')}';
-      final res = await _api.get(ApiConstants.bookings, params: {'date': dateStr});
-
-      // Accept both { data: [...] } and legacy plain array
-      final list = (res.data is Map ? res.data['data'] : res.data) as List;
       
-      _allBookings = list
+      // Fetch 1: today's bookings only (for "Today's Bookings" stat)
+      final todayRes  = await _api.get(ApiConstants.bookings, params: {'date': dateStr});
+      final todayList = (todayRes.data is Map ? todayRes.data['data'] : todayRes.data) as List;
+      _todayBookings  = todayList
+          .map((j) => BookingModel.fromJson(j as Map<String, dynamic>))
+          .toList();
+ 
+      // Fetch 2: ALL bookings (for accurate pending/confirmed/missed totals)
+      final allRes  = await _api.get(ApiConstants.bookings);
+      final allList = (allRes.data is Map ? allRes.data['data'] : allRes.data) as List;
+      _allBookings  = allList
           .map((j) => BookingModel.fromJson(j as Map<String, dynamic>))
           .toList();
 
       // Compute stats from the list
       _stats = {
-        'today':     _allBookings.length,
+        'today':     _todayBookings.length,
         'pending':   _allBookings.where((b) => b.status == 'pending').length,
         'confirmed': _allBookings.where((b) => b.status == 'confirmed').length,
+        'missed':    _allBookings.where((b) => b.status == 'missed').length,
         'revenue':   _allBookings
             .where((b) => b.status != 'cancelled')
             .fold<double>(0, (sum, b) => sum + b.price),

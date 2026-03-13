@@ -27,19 +27,25 @@ class ServiceProvider extends ChangeNotifier {
 
   // ── FETCH SERVICES ────────────────────────────────────────
   // GET /api/services?search=&category=
-  Future<void> fetchServices({String? search, String? category}) async {
+  Future<void> fetchServices({String? search, String? category, bool isInactive = false}) async {
     _isLoading = true; notifyListeners();
     try {
       final params = <String, String>{};
       if (search   != null && search.isNotEmpty)   params['search']   = search;
       if (category != null && category.isNotEmpty) params['category'] = category;
+      if (isInactive) params['include_inactive'] = 'true';
 
-      final res    = await _api.get(ApiConstants.services, params: params.isNotEmpty ? params : null);
+      final res = await _api.get(ApiConstants.services, params: params.isNotEmpty ? params : null);
       
-      final list = res.data['data'] as List? ?? res.data as List;
+      // API returns { status: 'success', data: [...] }
+      final list = res.data is Map 
+            ? (res.data['data'] as List) 
+            : res.data as List;
+
       _services = list
           .map((j) => ServiceModel.fromJson(j as Map<String, dynamic>))
           .toList();
+          
       _error = null;
     } catch (e, stack) {
       // _error = 'Failed to load services. Check your connection.';

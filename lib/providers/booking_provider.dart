@@ -5,6 +5,8 @@
 //   • createBooking: reads res.data['data'] response shape
 //   • Added: rescheduleBooking(bookingId, newSlotId)
 //   • All filtered getters unchanged
+//   • Added: missed getter
+//   • Added: markMissedBookings() — client-side sweep, called after fetch
 
 import 'package:flutter/material.dart';
 import 'package:slot_wise_booking/models/booking_model.dart';
@@ -24,6 +26,7 @@ class BookingProvider extends ChangeNotifier {
   List<BookingModel> get upcoming  => _bookings.where((b) => b.isUpcoming).toList();
   List<BookingModel> get past      => _bookings.where((b) => b.isPast).toList();
   List<BookingModel> get cancelled => _bookings.where((b) => b.isCancelled).toList();
+  List<BookingModel> get missed     => _bookings.where((b) => b.isMissed).toList();
 
   final _api = ApiService();
 
@@ -33,15 +36,45 @@ class BookingProvider extends ChangeNotifier {
     _isLoading = true; notifyListeners();
     try {
       final res  = await _api.get(ApiConstants.myBookings);
+      // Backend returns { status: 'success', data: [...] }
       final list = res.data['data'] as List;
       _bookings  = list
           .map((j) => BookingModel.fromJson(j as Map<String, dynamic>))
           .toList();
       _error = null;
+
+      // Client-side: mark overdue bookings as missed on the backend
+      await _markOverdueAsMissed();
     } catch (e) {
       _error = 'Could not load bookings.';
     } finally {
       _isLoading = false; notifyListeners();
+    }
+  }
+
+  /// Sweeps through bookings that are still pending/confirmed but whose slot
+  /// datetime has already passed, and updates them to 'missed' via the API.
+  /// Silent — errors don't surface to the user.
+  Future<void> _markOverdueAsMissed() async {
+    final overdue = _bookings.where((b) => b.isOverdue).toList();
+    if (overdue.isEmpty) return;
+ 
+    for (final b in overdue) {
+      try {
+        await _api.put('${ApiConstants.bookings}/${b.id}/status', {'status': 'missed'});
+      } catch (_) {}
+    }
+ 
+    // Re-fetch so the UI reflects the updated statuses
+    if (overdue.isNotEmpty) {
+      try {
+        final res  = await _api.get(ApiConstants.myBookings);
+        final list = (res.data is Map ? res.data['data'] : res.data) as List;
+        _bookings  = list
+            .map((j) => BookingModel.fromJson(j as Map<String, dynamic>))
+            .toList();
+        notifyListeners();
+      } catch (_) {}
     }
   }
 

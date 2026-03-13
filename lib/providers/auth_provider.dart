@@ -139,15 +139,27 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // ── LOGOUT ─────────────────────────────────────────────────
-  Future<void> logout() async {
-    try {
-      // Tell backend to clear FCM token (fire-and-forget — don't block logout on failure)
-      await _api.post('/auth/logout', {});
-    } catch (_) {}
+  // Future<void> logout() async {
+  //   try {
+  //     // Tell backend to clear FCM token (fire-and-forget — don't block logout on failure)
+  //     await _api.post('/auth/logout', {});
+  //   } catch (_) {}
 
+  //   await StorageService.deleteToken();
+  //   _user = null;
+  //   notifyListeners();
+  // }
+
+  Future<void> logout() async {
+    // Clear local state FIRST so the UI transitions to LoginScreen immediately.
+    // Never block the user waiting for a network call to complete.
     await StorageService.deleteToken();
     _user = null;
     notifyListeners();
+ 
+    // Fire-and-forget: tell backend to clear FCM token.
+    // Wrapped in try/catch so a slow or failed request never hangs the app.
+    _api.post('/auth/logout', {}).catchError((_) {});
   }
 
   // ── REFRESH USER (after profile edit) ─────────────────────

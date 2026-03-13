@@ -82,7 +82,7 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> {
           _row(Icons.person, 'Customer', b.customerName ?? 'N/A'),
           _row(Icons.email, 'Email', b.customerEmail ?? 'N/A'),
           _row(Icons.design_services, 'Service', b.serviceName),
-          _row(Icons.calendar_today, 'Date', b.slotDate),
+          _row(Icons.calendar_today, 'Date', b.displayDate),
           _row(Icons.access_time, 'Time', b.displayTime),
           _row(Icons.attach_money, 'Price', 'JMD \$${b.price.toStringAsFixed(2)}'),
           if (b.notes != null && b.notes!.isNotEmpty)
@@ -185,8 +185,8 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> {
                                     ]),
                                   const SizedBox(height: 2),
 
-                              // Date/time  
-                              Text('${b.slotDate}  ${b.startTime.substring(0,5)} – ${b.endTime.substring(0,5)}',
+                              // Date/time — formatted "Mar 12, 2026 09:20 – 09:30"
+                              Text('${b.displayDate}  ${b.startTime.substring(0,5)} – ${b.endTime.substring(0,5)}',
                                 style: const TextStyle(color: Colors.grey, fontSize: 13)),
                               const SizedBox(height: 4),
 

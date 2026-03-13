@@ -28,6 +28,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
+import 'package:slot_wise_booking/providers/notificationPreferencesProvider.dart';
 import 'package:slot_wise_booking/providers/admin_provider.dart';
 import 'package:slot_wise_booking/providers/booking_provider.dart';
 import 'package:slot_wise_booking/providers/notification_provider.dart';
@@ -136,6 +137,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => BookingProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
         ChangeNotifierProvider(create: (_) => AdminProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationPreferencesProvider()),
       ],
       child: const SlotwiseApp(),
     ),
@@ -174,6 +176,8 @@ class _SlotwiseAppState extends State<SlotwiseApp> {
       context.read<ThemeProvider>().applyRoleDefault(auth.user!.role);
       // Also pre-fetch notifications
       context.read<NotificationProvider>().fetchNotifications();
+      // Also load notification preferences
+      context.read<NotificationPreferencesProvider>().load();
     }
  
     if (mounted) setState(() => _sessionChecked = true);

@@ -10,6 +10,11 @@
 //   • UpcomingBookingsRow (next 5 bookings, horizontal)
 //
 // All widgets from home_widgets.dart — themed via SlotWiseColors.
+//
+// Changes:
+//   • NotificationProvider.startPolling() called on init — live badge updates
+//   • BookingProvider refresh also tied to polling (30s interval via my_bookings_screen)
+//   • stopPolling() called on dispose
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -32,25 +37,37 @@ class CustomerShell extends StatefulWidget {
   State<CustomerShell> createState() => _CustomerShellState();
 }
 
-class _CustomerShellState extends State<CustomerShell> {
+class _CustomerShellState extends State<CustomerShell> with WidgetsBindingObserver {
   final _pageCtrl = PageController();
   int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final svc = context.read<ServiceProvider>();
       svc.fetchServices();
       svc.fetchCategories();
       context.read<BookingProvider>().fetchMyBookings();
-      context.read<NotificationProvider>().fetchNotifications();
+      // startPolling handles the 30s interval + first immediate fetch
+      context.read<NotificationProvider>().startPolling();
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      context.read<NotificationProvider>().fetchNotifications();
+      context.read<BookingProvider>().fetchMyBookings();
+    }
   }
 
   @override
   void dispose() {
     _pageCtrl.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    context.read<NotificationProvider>().stopPolling();
     super.dispose();
   }
 
@@ -120,6 +137,7 @@ class _HomeTab extends StatelessWidget {
               await Future.wait([
                 context.read<ServiceProvider>().fetchServices(),
                 context.read<BookingProvider>().fetchMyBookings(),
+                context.read<NotificationProvider>().fetchNotifications(),
               ]);
             },
             child: SingleChildScrollView(

@@ -300,6 +300,49 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
 
           Divider(height: 1, color: c.primaryColor.withOpacity(0.08)),
 
+          // ── Slot generation info banner ──────────────────────
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: c.accentSoft,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: c.primaryColor.withOpacity(0.15)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline, size: 18, color: c.primaryColor),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'How slots are generated',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: c.primaryColor,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '• Creating a service auto-generates slots for the next 30 days.\n'
+                        '• Slots run 09:00 – 17:00, back-to-back by the service\'s duration.\n'
+                        '• A 30-min service gets 16 slots/day. A 5-hour service gets 1 slot/day.\n'
+                        '• To extend beyond 30 days, go to Manage Slots → pick the service → pick a future date → add slots manually.\n'
+                        '• Deleted slots can be re-added from Manage Slots the same way.',
+                        style: TextStyle(fontSize: 11, color: c.primaryColor.withOpacity(0.8), height: 1.5),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+
           // ── Service list ─────────────────────────────────────
           Expanded(
             child: _isLoading
