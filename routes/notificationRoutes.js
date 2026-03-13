@@ -8,15 +8,24 @@ const {
     markRead,
     sendToUser,         // Send push notification to a specific user
     broadcastToAll,     // Broadcast push notification to ALL users (admin only)
+    getPreferences,
+    updatePreferences,
 } = require('../controllers/notificationController');
 
 const { protect }    = require('../middlewares/authMiddleware');  // renamed for clarity
-// const {ctrl}    = require('../controllers/notificationController');
 const { adminOnly }    = require('../middlewares/adminMiddleware');   // Role check: admin only
 
-router.get('/get-all',           protect, getAll);
-router.put('/read-all',   protect, markAllRead);
-router.put('/:id/read',   protect, markRead);
+// ── Notification list ─────────────────────────────────────────────────────────
+router.get('/',           protect, getAll);        // GET /api/notifications  (Flutter default)
+router.get('/get-all',           protect, getAll); // legacy alias
+
+// ── Mark read ─────────────────────────────────────────────────────────────────
+router.put('/read-all',   protect, markAllRead);  // PUT  /api/notifications/read-all
+router.put('/:id/read',   protect, markRead);   // PUT  /api/notifications/:id/read
+
+// ── User preferences ──────────────────────────────────────────────────────────
+router.get('/preferences', protect, getPreferences);    // GET /api/notifications/preferences
+router.put('/preferences', protect, updatePreferences); // PUT /api/notifications/preferences
 
 // ─── Protected Routes ────────────────────────────────────────────────────────
 

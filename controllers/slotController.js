@@ -3,37 +3,41 @@ const pool = require('../config/db');
 
 // GET /api/slots?service_id=&date=
 exports.getSlots = async (req, res) => {
-  const { service_id, date } = req.query;
+  // const { service_id, date } = req.query;
+  const service_id = req.query.service_id;
 
   //---------------------------------------------------
-  const includeAll = req.query.all === 'true';
+  const includeAll = req.query.all === 'true'; // admin/staff: see unavailable slots too
   const dateParam = req.query.date || req.query.slot_date;
 
-  let query = `SELECT * FROM time_slots WHERE service_id = ?`;
-  const params = [serviceId];
-
-  if (dateParam) {
-    query += ` AND slot_date = ?`;
-    params.push(dateParam);
-  }
-  // Only filter is_available if NOT requesting all
-  if (!includeAll) {
-    query += ` AND is_available = 1`;
-  }
-  query += ` ORDER BY start_time ASC`;
-
   //------------------------------------------
-  if (!service_id || !date) {
-    return res.status(400).json({ message: 'service_id and date are required query params.' });
+  if (!service_id ) {
+    return res.status(400).json({ message: 'service_id is required query params.' });
   }
-
+  
   try {
-    const [rows] = await pool.execute(
-      `SELECT * FROM time_slots
-       WHERE service_id = ? AND slot_date = ? AND is_available = TRUE
-       ORDER BY start_time ASC`,
-      [service_id, date]
-    );
+    let query = `SELECT * FROM time_slots WHERE service_id = ?`;
+    const params = [service_id];
+    
+    if (dateParam) {
+      query += ` AND slot_date = ?`;
+      params.push(dateParam);
+    }
+
+    // Only filter is_available if NOT requesting all
+    if (!includeAll) {
+      query += ` AND is_available = 1`;
+    }
+
+    query += ` ORDER BY slot_date ASC, start_time ASC`;
+
+    const [rows] = await pool.execute(query, params);
+    // const [rows] = await pool.execute(
+    //   `SELECT * FROM time_slots
+    //    WHERE service_id = ? AND slot_date = ? AND is_available = TRUE
+    //    ORDER BY start_time ASC`,
+    //   [service_id, date]
+    // );
     return res.json(rows);
   } catch (err) {
     console.error('[slots getSlots]', err);

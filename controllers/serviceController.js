@@ -71,29 +71,39 @@ async function autoGenerateSlots(conn, serviceId, durationMinutes) {
 // ─────────────────────────────────────────────────────────────
 exports.getAll = async (req, res, next) => {
   const { search, category } = req.query;
-
-  //---------------------------------
   const includeInactive = req.query.include_inactive === 'true';
-  if (!includeInactive) {
-    whereConditions.push('is_active = 1');
-  }
-  //------------------------------------
 
-  try {
-    let sql = 'SELECT * FROM services WHERE is_active = TRUE';
-    let params = [];
+   try {
+    // Build WHERE clause dynamically
+    const conditions = [];
+    const params     = [];
+ 
+    // Only filter by is_active when NOT requesting inactive services too
+    if (!includeInactive) {
+      conditions.push('is_active = 1');
+    }
+    // let sql = 'SELECT * FROM services WHERE is_active = TRUE';
+    // let params = [];
 
     if (search) {
-      sql += ' AND name LIKE ?';
+      // sql += ' AND name LIKE ?';
+      conditions.push('name LIKE ?');
       params.push(`%${search}%`);
     }
 
     if (category) {
-      sql += ' AND category = ?';
+      // sql += ' AND category = ?';
+      conditions.push('category = ?');
       params.push(category);
     }
 
-    sql += ' ORDER BY category asc, name ASC';
+    const whereClause = conditions.length > 0
+      ? 'WHERE ' + conditions.join(' AND ')
+      : '';
+
+    const sql = `SELECT * FROM services ${whereClause} ORDER BY category ASC, name ASC`;
+
+    // sql += ' ORDER BY category asc, name ASC';
 
     const [rows] = await pool.execute(sql, params);
     //   return res.json(rows);
@@ -155,9 +165,12 @@ exports.create = async (req, res, next) => {
   try {
     await conn.beginTransaction();
 
+    const userId = req.user.id;
+
     // const [result] = await pool.execute(
     const [result] = await conn.query(
-      'INSERT INTO services (name, description, duration_minutes, price, image_url, category, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      `INSERT INTO services (name, description, duration_minutes, price, image_url, category, created_by) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         name.trim(),
         description || null,
@@ -165,7 +178,7 @@ exports.create = async (req, res, next) => {
         price,
         image_url || null,
         category,
-        req.user.id  // Track who created this service (for staff notifications)
+        userId  // Track who created this service (for staff notifications)
       ]
     );
     const serviceId = result.insertId;

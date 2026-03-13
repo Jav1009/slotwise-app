@@ -3,7 +3,7 @@
 require('dotenv').config();
 
 // Initialise Supabase Admin client
-require('./config/supabase');
+// require('./config/supabase');
 
 // Initialise Firebase Admin client
 require('./config/firebase');
@@ -16,4 +16,8 @@ const HOST = process.env.HOST || '0.0.0.0';
 app.listen(PORT, HOST, () => {
   console.log(`SlotWise API running on http://localhost:${PORT}`);
   console.log(`SlotWise APP running on http://192.168.50.147:${PORT}`);
+
+  // Start background scheduler AFTER server is listening
+  // Jobs: mark missed bookings (*/15min), send reminders (hourly)
+  require('./scheduler');
 });

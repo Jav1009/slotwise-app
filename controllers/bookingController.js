@@ -145,7 +145,8 @@ exports.getMyBookings = async (req, res, next) => {
          b.id, b.status, b.notes, b.created_at, b.updated_at,
          s.id   AS service_id,
          s.name AS service_name,
-         s.price, s.image_url,
+         s.price, s.image_url, s.category,
+         t.id       AS slot_id,
          t.slot_date, t.start_time, t.end_time
        FROM   bookings   b
        JOIN   services   s ON b.service_id = s.id
@@ -154,7 +155,8 @@ exports.getMyBookings = async (req, res, next) => {
        ORDER  BY t.slot_date DESC, t.start_time DESC`,
       [user_id]
     );
-    return res.json(rows);
+    // Wrap in consistent {status, data} shape — matches all other endpoints
+    return res.status(200).json({status: 'success', data: rows});
   } catch (err) {
     console.error('[bookings myBookings]', err);
     next(err)
@@ -235,7 +237,7 @@ exports.cancelBooking = async (req, res, next) => {
 
     const { slot_id, service_id, status } = rows[0];
 
-    if (status === 'cancelled' || status === 'completed') {
+    if (status === 'cancelled' || status === 'completed' || status === 'missed') {
       await conn.rollback();
       return res.status(400).json({ message: `Cannot cancel a booking with status '${status}'.` });
     }
@@ -333,7 +335,7 @@ exports.rescheduleBooking = async (req, res, next) => {
 
     const { slot_id: old_slot_id, service_id, status } = bookingRows[0];
 
-    if (status === 'cancelled' || status === 'completed') {
+    if (status === 'cancelled' || status === 'completed' || status === 'missed') {
       await conn.rollback();
       res.status(400);
       throw new Error(`Cannot reschedule a booking with status '${status}'`);
