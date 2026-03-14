@@ -2,7 +2,7 @@
 
 RESTful backend for the SlotWise Appointment Booking Application.  
 Built with **Node.js**, **Express**, **MySQL**, and **Firebase Admin SDK** (push notifications).  
-Authentication uses **Supabase JWT** verified server-side — swap to Firebase Auth anytime using the swap guide.
+Authentication uses **bcrypt + JWT** — no Supabase dependency.
 
 ---
 
@@ -11,338 +11,322 @@ Authentication uses **Supabase JWT** verified server-side — swap to Firebase A
 - Node.js v18+
 - MySQL 8.0+
 - npm
-- A Supabase project (or Firebase project — see Swap Guide)
-- A Firebase project with push notifications enabled (for FCM)
+- A Firebase project with FCM enabled (push notifications)
 
 ---
 
-## Setup Instructions
+## Setup
 
 ### 1. Install dependencies
 ```bash
-npm install express mysql2 dotenv bcrypt jsonwebtoken crypto firebase-admin @supabase/supabase-js
+npm install
+```
+
+Fresh install:
+```bash
+npm install express mysql2 dotenv bcrypt jsonwebtoken crypto nodemailer firebase-admin node-cron
 npm install --save-dev nodemon
 ```
 
 ### 2. Configure environment
-Create a `.env` file in the project root:
+Create `.env` in the project root:
 ```
 # Server
 PORT=3000
 NODE_ENV=development
 
-# MySQL Database
+# MySQL
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=yourpassword
 DB_NAME=slotwise
 
-# JWT (used for session tokens between Flutter and this API)
+# JWT
 JWT_SECRET=your-super-secret-jwt-key-at-least-32-characters
-JWT_EXPIRES_IN=1h
+JWT_EXPIRES_IN=7d
 
-# OTP (password reset)
+# OTP pepper (password reset)
 OTP_PEPPER=your-separate-otp-pepper-secret
 
-# Supabase (auth token verification)
-SUPABASE_URL=https://yourproject.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+# Email (password reset OTPs via nodemailer)
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
 
-# Firebase Admin SDK (push notifications)
+# Firebase Admin SDK (FCM push notifications)
 FIREBASE_PROJECT_ID=your-firebase-project-id
 FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n"
 ```
 
-### 3. Create the database and tables
-Open MySQL and run:
+### 3. Create the database tables
+Run each SQL file in order:
 ```bash
-mysql -u root -p < config/schema.sql
+mysql -u root -p slotwise < users_table.sql
+mysql -u root -p slotwise < services_table.sql
+mysql -u root -p slotwise < time_slot_table.sql
+mysql -u root -p slotwise < bookings_table.sql
+mysql -u root -p slotwise < notifications_table.sql
+mysql -u root -p slotwise < reminder_log_table.sql
 ```
-This creates the database, all tables, and seeds lookup data.
 
-**If upgrading an existing database**, run the migration to add new auth fields:
-```bash
-mysql -u root -p slotwise < migration/add_auth_fields.sql
+**Upgrading an existing database** — run these migrations:
+```sql
+-- Notification preferences on users table
+ALTER TABLE users
+  ADD COLUMN notifications_enabled TINYINT(1) NOT NULL DEFAULT 1,
+  ADD COLUMN reminders_enabled     TINYINT(1) NOT NULL DEFAULT 1;
+
+-- Add 'missed' status to bookings
+ALTER TABLE bookings
+  MODIFY COLUMN status ENUM('pending','confirmed','cancelled','completed','missed')
+  NOT NULL DEFAULT 'pending';
+
+-- Back-fill overdue rows
+UPDATE bookings b
+JOIN time_slots t ON b.slot_id = t.id
+SET b.status = 'missed'
+WHERE b.status IN ('pending','confirmed')
+  AND CONCAT(t.slot_date, ' ', t.end_time) < NOW();
 ```
-This safely adds `reset_token_hash`, `reset_token_expires`, and `fcm_token` columns.
 
 ### 4. Start the server
 ```bash
-# Production
-npm start
-
-# Development (auto-restart on file changes)
-npm run dev
+npm run dev    # development (nodemon auto-restart)
+npm start      # production
 ```
 
-The API will be available at `http://localhost:3000`
+API available at `http://localhost:3000`
 
 ---
 
 ## Project Structure
 
 ```
-slotwise_api/
-├── server.js                        # Entry point — loads .env, inits Firebase, starts listener
-├── app.js                           # Express setup — routes, middleware, error handler
+slot_wise_api/
+├── server.js                      # Entry point — loads .env, starts Express + scheduler
+├── app.js                         # Express setup — routes, CORS, error handler
+├── scheduler.js                   # node-cron: markMissedBookings (15min), sendReminders (1hr)
 ├── package.json
-├── .env                             # Environment variables (never commit this)
-├── .gitignore                       # Protects .env and service key files
+├── .env                           # Never commit this
 ├── config/
-│   ├── db.js                        # MySQL connection pool (reused across all controllers)
-│   ├── firebase.js                  # Firebase Admin SDK init (push notifications)
-│   ├── supabase.js                  # Supabase client init (auth token verification)
-│   └── schema.sql                   # Full database schema with seed data
-├── migration/
-│   └── add_auth_fields.sql          # Adds reset_token_hash, reset_token_expires, fcm_token
-├── middleware/
-│   ├── authMiddleware.js            # JWT verification — attaches req.user
-│   ├── adminMiddleware.js           # Role guard — blocks non-admins with 403
-│   └── errorMiddleware.js           # Centralized error handler + 404 handler
-├── utils/
-│   ├── jwt.js                       # Token signing and verification helpers
-│   └── email.js                     # Email utility (OTP + booking confirmations)
+│   ├── db.js                      # MySQL connection pool
+│   └── firebase.js                # Firebase Admin SDK init
 ├── controllers/
-│   ├── authController.js            # register, login, logout, updateFcmToken, forgotPassword, resetPassword
-│   ├── bookingController.js         # Booking CRUD + transaction logic + cancel flow
-│   ├── serviceController.js         # Service CRUD (admin only for write operations)
-│   ├── slotController.js            # Slot management — batch creation, availability
-│   └── notificationController.js   # Firebase push notifications — single user + broadcast
-└── routes/
-    ├── auth.routes.js               # /api/auth  — 6 endpoints
-    ├── booking.routes.js            # /api/bookings — 5 endpoints
-    ├── service.routes.js            # /api/services — 6 endpoints
-    ├── slot.routes.js               # /api/slots — 5 endpoints
-    └── notification.routes.js      # /api/notifications — 2 endpoints (admin only)
+│   ├── authController.js          # register, login, logout, getMe, updateProfile,
+│   │                              #   updateFcmToken, forgotPassword, resetPassword
+│   ├── bookingController.js       # createBooking, getMyBookings, getBookingById,
+│   │                              #   cancelBooking, rescheduleBooking,
+│   │                              #   getAllBookings, updateStatus
+│   ├── serviceController.js       # getAll, getOne, create, update, softDelete, getCategories
+│   ├── slotController.js          # getSlots, createSlots (batch), deleteSlot
+│   └── notificationController.js  # getAll, markRead, markAllRead,
+│                                  #   getPreferences, updatePreferences,
+│                                  #   sendToUser, broadcastToAll,
+│                                  #   notifyBookingConfirmed, notifyBookingCancelled,
+│                                  #   notifyStatusUpdate, notifyStaffNewBooking,
+│                                  #   notifyBookingMissed, notifyBookingReminder
+├── middlewares/
+│   ├── authMiddleware.js          # JWT verify — attaches req.user {id, role}
+│   ├── adminMiddleware.js         # staffOnly / adminOnly role guards
+│   ├── optionalAuth.js            # Attaches req.user if token present; doesn't block unauthenticated
+│   └── errorMiddleware.js         # Centralised error + 404 handler
+├── routes/
+│   ├── authRoutes.js
+│   ├── bookingRoutes.js
+│   ├── serviceRoutes.js
+│   ├── slotRoutes.js
+│   └── notificationRoutes.js
+└── utils/
+    ├── jwt.js                     # signToken, verifyToken
+    ├── email.js                   # sendOtpEmail via nodemailer
+    └── fcmHelper.js               # Firebase sendToToken wrapper
 ```
 
 ---
 
 ## Database Schema
 
-The `users` table includes these auth-related columns:
+### users
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INT PK | |
+| first_name | VARCHAR(100) | |
+| last_name | VARCHAR(100) | |
+| email | VARCHAR(255) UNIQUE | |
+| password_hash | VARCHAR(255) | bcrypt saltRounds=12 |
+| role | ENUM('user','staff','admin') | default 'user' |
+| is_active | TINYINT(1) | 0 = deactivated by admin |
+| fcm_token | VARCHAR(500) | set on login, cleared on logout |
+| reset_token_hash | VARCHAR(255) | SHA-256+pepper OTP hash |
+| reset_token_expires | DATETIME | 10-minute window |
+| notifications_enabled | TINYINT(1) | FCM push toggle, default 1 |
+| reminders_enabled | TINYINT(1) | reminder push toggle, default 1 |
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `password_hash` | VARCHAR(255) | bcrypt hash (saltRounds=12). Raw password never stored. |
-| `reset_token_hash` | VARCHAR(255) | SHA-256 + pepper hash of the 6-digit reset OTP. NULL when no reset is pending. |
-| `reset_token_expires` | DATETIME | OTP expiry timestamp. Checked before accepting a reset request. |
-| `fcm_token` | VARCHAR(500) | Firebase device token for push notifications. Set on login, cleared on logout. |
-| `is_active` | TINYINT(1) | 1 = active, 0 = deactivated by admin. Checked on every authenticated request. |
+### services
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INT PK | |
+| name | VARCHAR(255) | |
+| description | TEXT | nullable |
+| duration_minutes | INT | floor(480/duration) slots per day |
+| price | DECIMAL(10,2) | |
+| image_url | VARCHAR(500) | nullable |
+| category | VARCHAR(100) | nullable |
+| is_active | TINYINT(1) | soft delete |
+| created_by | INT FK → users.id | owning staff/admin — used for scope + notifications |
+
+### time_slots
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INT PK | |
+| service_id | INT FK | |
+| slot_date | DATE | |
+| start_time | TIME | |
+| end_time | TIME | |
+| is_available | TINYINT(1) | set FALSE when booked, TRUE when cancelled |
+
+### bookings
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INT PK | |
+| user_id | INT FK | customer |
+| service_id | INT FK | |
+| slot_id | INT FK | |
+| status | ENUM | pending/confirmed/cancelled/completed/missed |
+| notes | TEXT | nullable |
+| created_at, updated_at | DATETIME | |
+
+### notifications
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INT PK | |
+| user_id | INT FK | recipient |
+| booking_id | INT FK | nullable |
+| message | TEXT | |
+| is_read | TINYINT(1) | default 0 |
+| created_at | DATETIME | |
+
+### reminder_log
+Dedup table — one row per booking per window. Prevents the scheduler from sending duplicate reminders after server restarts.
 
 ---
 
 ## API Endpoints
 
-### Auth
+### Auth  `/api/auth`
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | /api/auth/register | None | Register a new staff user |
-| POST | /api/auth/login | None | Login and receive JWT |
-| POST | /api/auth/logout | JWT | Clear FCM token and end session |
-| PUT | /api/auth/fcm-token | JWT | Register/update device push notification token |
-| POST | /api/auth/forgot-password | None | Send 6-digit OTP to email |
-| POST | /api/auth/reset-password | None | Verify OTP and set new password |
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | /register | — | Register (role=user) |
+| POST | /login | — | Login → `{ token, user }` |
+| POST | /logout | JWT | Clear FCM token |
+| GET | /me | JWT | Get own profile |
+| PUT | /me | JWT | Update name / profile picture |
+| PUT | /fcm-token | JWT | Register / refresh FCM token |
+| POST | /forgot-password | — | Send 6-digit OTP to email |
+| POST | /reset-password | — | Verify OTP + set new password |
 
-### Services
+### Services  `/api/services`
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | /api/services | JWT | Get all services |
-| GET | /api/services?available=true | JWT | Get only available services |
-| GET | /api/services/:id | JWT | Get a single service by ID |
-| POST | /api/services | Admin | Create a new service |
-| PUT | /api/services/:id | Admin | Update a service |
-| DELETE | /api/services/:id | Admin | Delete a service |
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | / | optional | All services. Staff scoped to `created_by`. Query: `?include_inactive=true`, `?search=`, `?category=` |
+| GET | /:id | optional | One service + available slots |
+| GET | /categories | optional | Distinct category list |
+| POST | / | staff/admin | Create — auto-generates 30 days of slots |
+| PUT | /:id | staff/admin | Update |
+| DELETE | /:id | staff/admin | Soft delete (is_active=false) |
 
-### Slots
+### Slots  `/api/slots`
 
-| Method | Endpoint   | Auth | Description |
-|--------|------------|------|-------------|
-| GET    | /api/slots | JWT  | Get all slots |
-| GET    | /api/slots?date=YYYY-MM-DD | JWT | Get slots for a specific date |
-| GET    | /api/slots/:id | JWT | Get a single slot |
-| POST   | /api/slots | Admin | Create time slots (batch supported) |
-| DELETE | /api/slots/:id | Admin | Delete a slot |
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | / | JWT | Query: `?service_id=`, `?date=`, `?all=true` |
+| POST | / | staff/admin | Batch-create slots |
+| DELETE | /:id | staff/admin | Delete slot |
 
-### Bookings
+### Bookings  `/api/bookings`
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | /api/bookings | JWT | Get all bookings for the current user |
-| GET | /api/bookings/:id | JWT | Get a single booking |
-| POST | /api/bookings | JWT | Create a booking (triggers push notification) |
-| PUT | /api/bookings/:id/status | Admin | Update booking status (triggers push notification) |
-| PUT | /api/bookings/:id/cancel | JWT | Cancel a scheduled booking |
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | /my | JWT | Own bookings → `{ status, data: [] }` |
+| GET | / | staff/admin | All bookings. Staff scoped. Query: `?status=`, `?date=`, `?service_id=` |
+| GET | /:id | JWT | One booking (customer: own only) |
+| POST | / | JWT | Create — SELECT FOR UPDATE slot lock, notifies customer + staff |
+| PUT | /:id/cancel | JWT | Cancel — frees slot |
+| PUT | /:id/reschedule | JWT | Atomic slot swap |
+| PUT | /:id/status | staff/admin | Update status (pending/confirmed/completed/cancelled/missed) |
 
-### Notifications (Admin only)
+### Notifications  `/api/notifications`
 
-| Method | Endpoint                | Auth  | Description |
-|--------|-------------------------|-------|-------------|
-| POST   | /api/notifications/send | Admin | Send push notification to a specific user |
-| POST | /api/notifications/broadcast | Admin | Send push notification to all users |
-
----
-
-## Example Request Bodies
-
-### POST /api/auth/register
-```json
-{
-  "locationCode": "KGN01",
-  "firstName": "Javaughn",
-  "lastName": "Brown",
-  "email": "javaughn@example.com",
-  "password": "SecurePassword123"
-}
-```
-
-### POST /api/auth/login
-```json
-{
-  "email": "javaughn@example.com",
-  "password": "SecurePassword123"
-}
-```
-
-### PUT /api/auth/fcm-token
-```json
-{
-  "fcm_token": "dGhpcyBpcyBhIHNhbXBsZSBGQ00gdG9rZW4..."
-}
-```
-
-### POST /api/auth/forgot-password
-```json
-{
-  "email": "javaughn@example.com"
-}
-```
-
-### POST /api/auth/reset-password
-```json
-{
-  "email": "javaughn@example.com",
-  "otp": "482910",
-  "newPassword": "NewSecurePassword456"
-}
-```
-
-### POST /api/bookings
-```json
-{
-  "service_id": 2,
-  "slot_id": 14,
-  "notes": "Please send a reminder 30 minutes before."
-}
-```
-
-### PUT /api/bookings/:id/status
-```json
-{
-  "status": "Confirmed"
-}
-```
-
-### POST /api/notifications/send
-```json
-{
-  "userId": 5,
-  "title": "Reminder",
-  "body": "Your appointment is tomorrow at 10:00 AM.",
-  "data": {
-    "type": "reminder",
-    "booking_id": "14"
-  }
-}
-```
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | / | JWT | Own notifications → `{ status, data: [] }` |
+| PUT | /:id/read | JWT | Mark one read |
+| PUT | /read-all | JWT | Mark all read |
+| GET | /preferences | JWT | Get push preferences |
+| PUT | /preferences | JWT | Update push preferences |
+| POST | /send | JWT | Push to specific user |
+| POST | /broadcast | admin | Push to all users with FCM token |
 
 ---
 
 ## Response Format
 
-All responses follow this structure:
-
-**Success:**
+**Success**
 ```json
-{
-  "status": "success",
-  "message": "User logged in successfully",
-  "data": {
-    "token": "eyJhbGci...",
-    "user": {
-      "id": 1,
-      "firstName": "Javaughn",
-      "email": "javaughn@example.com",
-      "role": "staff",
-      "hasFcmToken": true
-    }
-  }
-}
+{ "status": "success", "data": { ... } }
 ```
 
-**Error:**
+**Error**
 ```json
-{
-  "success": false,
-  "error": "Invalid email or password"
-}
+{ "message": "Human-readable description" }
 ```
 
 ---
 
-## HTTP Status Codes Used
+## Booking Status Flow
 
-| Code | Meaning |
-|------|---------|
-| 200 | OK — successful request |
-| 201 | Created — resource created |
-| 400 | Bad Request — validation or OTP error |
-| 401 | Unauthorized — missing or invalid JWT |
-| 403 | Forbidden — account inactive or insufficient role |
-| 404 | Not Found — resource or route missing |
-| 409 | Conflict — duplicate record or FK constraint |
-| 500 | Internal Server Error |
+```
+pending ──► confirmed ──► completed
+   │              │
+   └──────────────┴──► cancelled
+                  └──► missed  (scheduler or client sweep)
+```
+
+The scheduler marks bookings `missed` every 15 minutes when slot end time has passed.  
+The Flutter client also sweeps on fetch via `PUT /bookings/:id/status { status: "missed" }`.
+
+---
+
+## Slot Auto-Generation
+
+`POST /api/services` auto-generates slots for 30 days at 09:00–17:00.  
+Slots per day = `floor(480 / duration_minutes)` (minimum 1).  
+To add slots beyond 30 days: `POST /api/slots` with `service_id`, `date`, and `times[]`.
 
 ---
 
 ## Push Notifications
 
-Firebase Cloud Messaging (FCM) is used for push notifications. Notifications are sent automatically on:
+Sent automatically on:
+- Booking created → customer + service owner (staff/admin)
+- Booking cancelled → customer + service owner
+- Status updated → customer
+- Booking rescheduled → customer + service owner
+- Booking missed → customer (scheduler)
+- Reminders → customer 24h and 1h before (scheduler, deduped via `reminder_log`)
 
-- **Booking created** — user receives a confirmation notification
-- **Status updated** — user is notified when admin changes booking status
-- **Booking cancelled** — user is notified of cancellation
-
-FCM tokens are managed as follows:
-
-1. Flutter calls `FirebaseMessaging.instance.getToken()` after login
-2. Flutter sends the token to `PUT /api/auth/fcm-token`
-3. Backend stores the token in `users.fcm_token`
-4. On logout, `POST /api/auth/logout` clears the token
-
-Stale tokens (e.g., after app reinstall) are automatically cleared when Firebase returns `registration-token-not-registered`.
+`notifications_enabled` / `reminders_enabled` user columns gate FCM pushes.  
+In-app notifications (`notifications` table) are always inserted.
 
 ---
 
-## Auth Provider
+## Security
 
-This project currently uses **Supabase JWT** for token verification.  
-To switch to **Firebase Auth** (or back), follow the `firebase_supabase_swap_guide.docx`.  
-
-> **Note:** Firebase push notifications are independent of the auth provider.  
-> You can use Supabase Auth and FCM notifications simultaneously.
-
----
-
-## Security Notes
-
-- `password_hash` uses bcrypt with saltRounds=12 — raw passwords are never stored
-- Reset OTPs are hashed with SHA-256 + pepper before storage — never stored raw
-- OTPs expire after 10 minutes and are cleared after successful use
-- JWT tokens expire after 1 hour
-- FCM tokens are cleared on logout to stop notifications for inactive sessions
-- `.env` and `serviceAccountKey.json` must never be committed to Git
+- Passwords: bcrypt saltRounds=12
+- OTPs: SHA-256+pepper hashed, 10-minute expiry, single-use
+- JWT: 7-day expiry
+- Staff scope: staff only access services/bookings where `created_by = their user_id`
+- Never commit `.env` or any Firebase service account JSON file

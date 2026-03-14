@@ -1239,3 +1239,358 @@ Fix applied: Changed 'u.name' to 'CONCAT(u.first_name, \' \', u.last_name)' in t
     at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
     at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
     at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T01:14:18.683Z] POST /api/auth/login --> Invalid email or password
+   Stack: Error: Invalid email or password
+    at exports.login (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\controllers\authController.js:165:19)
+
+[2026-03-14T05:36:14.525Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:36:44.527Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:37:14.521Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:37:44.552Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:38:14.510Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:38:44.513Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:39:14.513Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:39:44.524Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:39:56.961Z] GET /api/bookings/my --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:39:59.068Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:40:06.553Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:40:14.532Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:40:44.525Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:41:14.515Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:41:44.525Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:42:14.505Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:42:44.494Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:43:14.497Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:43:44.503Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:44:14.488Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:44:44.524Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:45:14.489Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:45:44.513Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:46:14.497Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:46:44.512Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:47:14.507Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)
+
+[2026-03-14T05:47:44.499Z] GET /api/notifications --> No token provided. Authorization denied.
+   Stack: Error: No token provided. Authorization denied.
+    at exports.authMiddleware (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\middlewares\authMiddleware.js:42:19)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Admin\Desktop\amber academy final project\slotwise\slot_wise_api\node_modules\router\index.js:186:3)

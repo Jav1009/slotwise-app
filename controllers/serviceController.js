@@ -73,6 +73,10 @@ exports.getAll = async (req, res, next) => {
   const { search, category } = req.query;
   const includeInactive = req.query.include_inactive === 'true';
 
+  // req.user is set by auth middleware when the route is protected.
+  // Public calls (no auth) have req.user = undefined → treat as customer (active only, all services).
+  const requester = req.user || null;
+
    try {
     // Build WHERE clause dynamically
     const conditions = [];
@@ -82,8 +86,13 @@ exports.getAll = async (req, res, next) => {
     if (!includeInactive) {
       conditions.push('is_active = 1');
     }
-    // let sql = 'SELECT * FROM services WHERE is_active = TRUE';
-    // let params = [];
+
+    // Staff scope — staff can only see services THEY created
+    // Admin and public (customers) see all
+    if (requester && requester.role === 'staff') {
+      conditions.push('created_by = ?');
+      params.push(requester.id);
+    }
 
     if (search) {
       // sql += ' AND name LIKE ?';
@@ -102,8 +111,6 @@ exports.getAll = async (req, res, next) => {
       : '';
 
     const sql = `SELECT * FROM services ${whereClause} ORDER BY category ASC, name ASC`;
-
-    // sql += ' ORDER BY category asc, name ASC';
 
     const [rows] = await pool.execute(sql, params);
     //   return res.json(rows);

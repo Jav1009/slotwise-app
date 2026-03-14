@@ -435,6 +435,7 @@ exports.rescheduleBooking = async (req, res, next) => {
 // ─────────────────────────────────────────────────────────────
 exports.getAllBookings = async (req, res, next) => {
   const { status, date, service_id } = req.query;
+  const { role, id: requesterId } = req.user;
   try {
     let sql = `
       SELECT
@@ -448,6 +449,13 @@ exports.getAllBookings = async (req, res, next) => {
       JOIN   time_slots t ON b.slot_id    = t.id
       WHERE  1 = 1`;
     const params = [];
+
+    // Staff can only see bookings for services THEY created
+    // Admin sees everything
+    if (role === 'staff') {
+      sql += ' AND s.created_by = ?';
+      params.push(requesterId);
+    }
 
     if (status)     { sql += ' AND b.status = ?'; params.push(status); }
     if (date)       { sql += ' AND t.slot_date = ?'; params.push(date); }
@@ -473,7 +481,7 @@ exports.updateStatus = async (req, res, next) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  const allowed = ['pending', 'confirmed', 'completed', 'cancelled'];
+  const allowed = ['pending', 'confirmed', 'completed', 'cancelled', 'missed'];
   if (!allowed.includes(status)) {
     return res.status(400).json({ message: `Invalid status. Must be one of: ${allowed.join(', ')}` });
   }
@@ -505,6 +513,7 @@ exports.updateStatus = async (req, res, next) => {
       confirmed: 'Your booking has been confirmed!',
       completed: 'Thank you! Your appointment is complete.',
       cancelled: 'Your booking has been cancelled by the admin.',
+      missed:    'Your booking was marked as missed because the appointment time has passed.',
     };
     if (messages[status]) {
       await conn.execute(
@@ -532,6 +541,7 @@ exports.updateStatus = async (req, res, next) => {
   } catch (err) {
     await conn.rollback();
     console.error('[bookings updateStatus]', err);
+    next(err)
     return res.status(500).json({ message: 'Failed to update status.' });
   } finally {
     conn.release();

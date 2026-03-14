@@ -10,12 +10,14 @@ const express    = require('express');
 const router     = express.Router();
 const { protect } = require('../middlewares/authMiddleware');
 const { adminOnly, staffOrAdmin }  = require('../middlewares/adminMiddleware');
+const { optionalAuth }  = require('../middlewares/optionalAuth');
 const ctrl       = require('../controllers/serviceController');
 
-// Public routes — no auth required
-router.get('/categories', ctrl.getCategories);  // Must be before /:id
-router.get('/',    ctrl.getAll);
-router.get('/:id', ctrl.getOne);
+// Public routes — optionalAuth attaches req.user when a token IS present
+// (so staff GET /services only sees their own, customers see all active)
+router.get('/categories', optionalAuth, ctrl.getCategories);  // Must be before /:id
+router.get('/', optionalAuth,   ctrl.getAll);
+router.get('/:id', optionalAuth, ctrl.getOne);
 
 // Admin or Staff routes
 // protect ensures user is authenticated; adminOnly checks role
