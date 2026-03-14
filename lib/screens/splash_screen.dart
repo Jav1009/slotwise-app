@@ -13,20 +13,16 @@
 //   1.6s  → Loading indicator fades in
 //   2.2s+ → Navigate (only after session check also completes)
 //
-// NAVIGATION:
-//   AppState.authenticated + isAdmin → AdminDashboardScreen
-//   AppState.authenticated           → ServicesScreen
-//   AppState.unauthenticated         → LoginScreen
-//
-// PLACE THIS FILE AT:
-//   lib/features/auth/screens/splash_screen.dart
+// NAVIGATION (via AppNav shortcuts — all use pushNamedAndRemoveUntil):
+//   authenticated + isAdmin → AdminDashboardScreen  (/admin)
+//   authenticated + isStaff → StaffDashboardScreen  (/staff)
+//   authenticated           → CustomerShell         (/home)
+//   unauthenticated         → LoginScreen           (/login)
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:slot_wise_booking/providers/auth_provider.dart';
-import 'package:slot_wise_booking/screens/auth/login_screen.dart';
-import 'package:slot_wise_booking/screens/admin/admin_dashboard_screen.dart';
-import 'package:slot_wise_booking/screens/customer/service_screen.dart';
+import 'package:slot_wise_booking/routes/routes.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -122,7 +118,7 @@ class _SplashScreenState extends State<SplashScreen>
     authProvider.tryRestoreSession().then((_) {
       if (mounted) {
         setState(() => _sessionCheckDone = true);
-        // _maybeNavigate();
+        _maybeNavigate();
       }
     });
 
@@ -147,39 +143,29 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
     setState(() => _minTimeDone = true);
-    // _maybeNavigate();
+    _maybeNavigate();
   }
 
-  // Only navigate when BOTH conditions are true
-  // void _maybeNavigate() {
-  //   if (!_sessionCheckDone || !_minTimeDone) return;
-  //   if (!mounted) return;
-//
-  //   final auth = context.read<AuthProvider>();
-//
-  //   Widget destination;
-  //   if (auth.appState == AppState.authenticated) {
-  //     destination = auth.isAdmin
-  //         ? const AdminDashboardScreen()
-  //         : const ServicesScreen();
-  //   } else {
-  //     destination = const LoginScreen();
-  //   }
-//
-  //   Navigator.of(context).pushReplacement(
-  //     PageRouteBuilder(
-  //       pageBuilder:    (_, __, ___) => destination,
-  //       // Smooth fade transition out of splash
-  //       transitionsBuilder: (_, animation, __, child) {
-  //         return FadeTransition(
-  //           opacity: CurvedAnimation(parent: animation, curve: Curves.easeIn),
-  //           child: child,
-  //         );
-  //       },
-  //       transitionDuration: const Duration(milliseconds: 400),
-  //     ),
-  //   );
-  // }
+  // Navigate only when BOTH the session check AND the minimum animation
+  // time have completed — whichever finishes last triggers the route.
+  void _maybeNavigate() {
+    if (!_sessionCheckDone || !_minTimeDone) return;
+    if (!mounted) return;
+
+    final auth = context.read<AuthProvider>();
+
+    if (auth.isLoggedIn) {
+      if (auth.isAdmin) {
+        context.goAdminDashboard();
+      } else if (auth.isStaff) {
+        context.goStaffDashboard();
+      } else {
+        context.goCustomerHome();
+      }
+    } else {
+      context.goLogin();
+    }
+  }
 
   @override
   void dispose() {

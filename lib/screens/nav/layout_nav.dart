@@ -41,6 +41,18 @@ class _CustomerShellState extends State<CustomerShell> with WidgetsBindingObserv
   final _pageCtrl = PageController();
   int _currentIndex = 0;
 
+  // Saved references — safe to call in dispose() unlike context.read()
+  NotificationProvider? _notificationProvider;
+  BookingProvider?      _bookingProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Save provider refs here — context is still valid in didChangeDependencies
+    _notificationProvider = context.read<NotificationProvider>();
+    _bookingProvider      = context.read<BookingProvider>();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -58,8 +70,10 @@ class _CustomerShellState extends State<CustomerShell> with WidgetsBindingObserv
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && mounted) {
-      context.read<NotificationProvider>().fetchNotifications();
-      context.read<BookingProvider>().fetchMyBookings();
+      // context.read<NotificationProvider>().fetchNotifications();
+      // context.read<BookingProvider>().fetchMyBookings();
+      _notificationProvider?.fetchNotifications();
+      _bookingProvider?.fetchMyBookings();
     }
   }
 
@@ -67,7 +81,8 @@ class _CustomerShellState extends State<CustomerShell> with WidgetsBindingObserv
   void dispose() {
     _pageCtrl.dispose();
     WidgetsBinding.instance.removeObserver(this);
-    context.read<NotificationProvider>().stopPolling();
+    // Use saved references — context is deactivated by the time dispose() runs
+    _notificationProvider?.stopPolling();
     super.dispose();
   }
 

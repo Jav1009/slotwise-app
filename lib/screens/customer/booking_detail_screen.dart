@@ -60,13 +60,13 @@ class BookingDetailScreen extends StatelessWidget {
                 child: Column(children: [
                   _detailRow(Icons.design_services, 'Service', booking.serviceName),
                   if (booking.category != null)
-                    _detailRow(Icons.category_outlined, 'Category', booking.category!),
-                  _detailRow(Icons.calendar_today, 'Date', booking.slotDate),
+                    _detailRow(Icons.category_outlined, 'Category', booking.displayCategory!),
+                  _detailRow(Icons.calendar_today, 'Date', booking.displayDate),
                   _detailRow(Icons.access_time, 'Time', booking.displayTime),
                   _detailRow(Icons.attach_money, 'Price', 'JMD \$${booking.price.toStringAsFixed(2)}'),
                   _detailRow(Icons.tag, 'Booking ID', '#${booking.id}'),
                   _detailRow(Icons.schedule, 'Booked on',
-                    '${booking.createdAt.year}-${booking.createdAt.month.toString().padLeft(2,'0')}-${booking.createdAt.day.toString().padLeft(2,'0')}'),
+                    _formatDate(booking.createdAt)),
                   if (booking.notes != null && booking.notes!.isNotEmpty)
                     _detailRow(Icons.notes, 'Notes', booking.notes!),
                 ]),
@@ -121,8 +121,16 @@ class BookingDetailScreen extends StatelessWidget {
       case 'confirmed':  return Icons.check_circle_outline;
       case 'completed':  return Icons.task_alt;
       case 'cancelled':  return Icons.cancel_outlined;
+      case 'missed':     return Icons.event_busy_outlined;
       default:           return Icons.hourglass_empty;
     }
+  }
+
+  /// Formats a DateTime as "Mar 14, 2026" — consistent with BookingModel.displayDate
+  String _formatDate(DateTime dt) {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun',
+                    'Jul','Aug','Sep','Oct','Nov','Dec'];
+    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
   }
 
   Widget _detailRow(IconData icon, String label, String value) {

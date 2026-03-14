@@ -9,6 +9,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:slot_wise_booking/routes/routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_colors.dart';
 import '../../widgets/notification_dialog.dart';
@@ -220,7 +221,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             borderRadius: BorderRadius.circular(14)),
                         minimumSize: const Size(double.infinity, 52),
                       ),
-                      onPressed: () => context.read<AuthProvider>().logout(),
+                      onPressed: () async {
+                        await context.read<AuthProvider>().logout();
+                        if (context.mounted) context.goLogin();
+                      },
                     ),
                   ),
 

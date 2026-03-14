@@ -53,8 +53,8 @@ class ApiService {
   Future<Response> get(String path, {Map<String, dynamic>? params}) =>
       _dio.get(path, queryParameters: params);
 
-  Future<Response> post(String path, dynamic data) =>
-      _dio.post(path, data: data);
+  Future<Response> post(String path, dynamic data, {Options? options}) =>
+      _dio.post(path, data: data, options: options);
 
   Future<Response> put(String path, dynamic data) =>
       _dio.put(path, data: data);

@@ -35,6 +35,18 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> with WidgetsBindingObserver {
+  
+  // Saved references — safe to call in dispose()
+  AdminProvider?        _adminProvider;
+  NotificationProvider? _notificationProvider;
+ 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _adminProvider        = context.read<AdminProvider>();
+    _notificationProvider = context.read<NotificationProvider>();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -48,16 +60,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Widget
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && mounted) {
-      context.read<AdminProvider>().fetchDashboardData();
-      context.read<NotificationProvider>().fetchNotifications();
+      // context.read<AdminProvider>().fetchDashboardData();
+      // context.read<NotificationProvider>().fetchNotifications();
+      _adminProvider?.fetchDashboardData();
+      _notificationProvider?.fetchNotifications();
     }
   }
  
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    context.read<AdminProvider>().stopPolling();
-    context.read<NotificationProvider>().stopPolling();
+    // context.read<AdminProvider>().stopPolling();
+    // context.read<NotificationProvider>().stopPolling();
+    // Use saved references — context is deactivated by the time dispose() runs
+    _adminProvider?.stopPolling();
+    _notificationProvider?.stopPolling();
     super.dispose();
   }
 
@@ -123,7 +140,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Widget
   @override
   Widget build(BuildContext context) {
     final c    = Theme.of(context).extension<SlotWiseColors>()!;
-    final user = context.watch<AuthProvider>().user!;
+    // user can briefly be null during logout — return empty scaffold for that one frame
+    final user = context.watch<AuthProvider>().user;
+    if (user == null) return const Scaffold(body: SizedBox.shrink());
 
     return Scaffold(
       appBar: AppBar(

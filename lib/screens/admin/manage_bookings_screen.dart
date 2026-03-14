@@ -26,7 +26,7 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> {
   bool          _loading      = true;
   String?            _filterDate;
 
-  final _statuses = ['pending', 'confirmed', 'completed', 'cancelled'];
+  final _statuses = ['pending', 'confirmed', 'completed', 'cancelled', 'missed'];
 
   @override
   void initState() { super.initState(); _load(); }

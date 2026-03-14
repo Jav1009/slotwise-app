@@ -118,17 +118,17 @@ class BookingModel {
   factory BookingModel.fromJson(Map<String, dynamic> json) => BookingModel(
     id:          json['id'],
     status:      json['status'],
-    notes:       json['notes'] as String,
+    notes:       json['notes'] as String?, // nullable — no notes is fine
     serviceId:   (json['service_id']  as int?) ?? 0,
     serviceName: json['service_name'] ?? 'Unknown service',
     price:       double.parse(json['price'].toString()),
-    imageUrl:    json['image_url']    as String,
+    imageUrl:    json['image_url']    as String?, // nullable — service may have no image
     category:    json['category']     as String?,
     slotId:      (json['slot_id']     as int?) ?? 0,
     slotDate:    json['slot_date'].toString(),
     startTime:   json['start_time'].toString(),
     endTime:     json['end_time'].toString(),
-    createdAt:   DateTime.parse(json['created_at']),
+    createdAt:   DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now(),
     updatedAt:     json['updated_at'] != null
                      ? DateTime.tryParse(json['updated_at'].toString())
                      : null,

@@ -30,25 +30,29 @@ class ManageServicesScreen extends StatefulWidget {
 }
 
 class _ManageServicesScreenState extends State<ManageServicesScreen> {
-  final _api             = ApiService();
-  List<ServiceModel>     _services = [];
-  bool                   _isLoading = true;
-  _ServiceFilter         _filter    = _ServiceFilter.all;
+  final _api = ApiService();
+  List<ServiceModel> _services = [];
+  bool _isLoading = true;
+  _ServiceFilter _filter = _ServiceFilter.all;
 
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() {
+    super.initState();
+    _load();
+  }
 
   Future<void> _load() async {
     setState(() => _isLoading = true);
     try {
       // FIX: always request inactive services too so toggling doesn't hide them
-      final res  = await _api.get(
+      final res = await _api.get(
         ApiConstants.services,
         params: {'include_inactive': 'true'},
       );
-      final list = (res.data is Map ? res.data['data'] ?? res.data : res.data) as List;
+      final list =
+          (res.data is Map ? res.data['data'] ?? res.data : res.data) as List;
       setState(() {
-        _services  = list.map((j) => ServiceModel.fromJson(j)).toList();
+        _services = list.map((j) => ServiceModel.fromJson(j)).toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -58,121 +62,171 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
 
   List<ServiceModel> get _filtered {
     switch (_filter) {
-      case _ServiceFilter.active:   return _services.where((s) =>  s.isActive).toList();
-      case _ServiceFilter.inactive: return _services.where((s) => !s.isActive).toList();
-      case _ServiceFilter.all:      return _services;
+      case _ServiceFilter.active:
+        return _services.where((s) => s.isActive).toList();
+      case _ServiceFilter.inactive:
+        return _services.where((s) => !s.isActive).toList();
+      case _ServiceFilter.all:
+        return _services;
     }
   }
 
   void _showAddEditDialog([ServiceModel? existing]) {
-    final nameCtrl     = TextEditingController(text: existing?.name);
-    final descCtrl     = TextEditingController(text: existing?.description);
-    final durCtrl      = TextEditingController(
-        text: existing != null ? existing.durationMinutes.toString() : '');
-    final priceCtrl    = TextEditingController(
-        text: existing != null ? existing.price.toString() : '');
+    final nameCtrl = TextEditingController(text: existing?.name);
+    final descCtrl = TextEditingController(text: existing?.description);
+    final durCtrl = TextEditingController(
+      text: existing != null ? existing.durationMinutes.toString() : '',
+    );
+    final priceCtrl = TextEditingController(
+      text: existing != null ? existing.price.toString() : '',
+    );
     final categoryCtrl = TextEditingController(text: existing?.category);
-    final form         = GlobalKey<FormState>();
+    final form = GlobalKey<FormState>();
 
-    showDialog(
+    // Use a bottom sheet instead of a dialog — bottom sheets naturally resize
+    // when the keyboard appears, so there is no overflow regardless of screen size.
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(existing == null ? 'Add Service' : 'Edit Service'),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: Form(
+      isScrollControlled:
+          true, // required — lets the sheet grow above the keyboard
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      builder: (ctx) => Padding(
+        // Shift dialog up when keyboard appears so actions stay visible
+        padding: EdgeInsets.fromLTRB(
+            20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
+        child: Form(
           key: form,
           child: SingleChildScrollView(
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              TextFormField(
-                controller: nameCtrl,
-                decoration: const InputDecoration(
-                    labelText: 'Service Name',
-                    prefixIcon: Icon(Icons.design_services_outlined)),
-                validator: (v) => v?.isEmpty == true ? 'Required' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: descCtrl,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                    labelText: 'Description',
-                    prefixIcon: Icon(Icons.description_outlined)),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: categoryCtrl,
-                decoration: const InputDecoration(
-                    labelText: 'Category',
-                    hintText: 'Hair, Nails, Skin …',
-                    prefixIcon: Icon(Icons.category_outlined)),
-                validator: (v) => v?.isEmpty == true ? 'Required' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: durCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                    labelText: 'Duration (minutes)',
-                    prefixIcon: Icon(Icons.timer_outlined)),
-                validator: (v) => v?.isEmpty == true ? 'Required' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: priceCtrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                    labelText: 'Price (JMD)',
-                    prefixIcon: Icon(Icons.attach_money)),
-                validator: (v) => v?.isEmpty == true ? 'Required' : null,
-              ),
-            ]),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 20),
+
+                // Handle bar
+                Center(
+                  child: Container(
+                    width: 40, height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+ 
+                Text(
+                  existing == null ? 'Add Service' : 'Edit Service',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 16),
+ 
+                TextFormField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(
+                      labelText: 'Service Name',
+                      prefixIcon: Icon(Icons.design_services_outlined)),
+                  validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: descCtrl,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                      labelText: 'Description',
+                      prefixIcon: Icon(Icons.description_outlined)),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: categoryCtrl,
+                  decoration: const InputDecoration(
+                      labelText: 'Category',
+                      hintText: 'Hair, Nails, Skin …',
+                      prefixIcon: Icon(Icons.category_outlined)),
+                  validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: durCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                      labelText: 'Duration (minutes)',
+                      prefixIcon: Icon(Icons.timer_outlined)),
+                  validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: priceCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                      labelText: 'Price (JMD)',
+                      prefixIcon: Icon(Icons.attach_money)),
+                  validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                ),
+                const SizedBox(height: 20),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          if (!form.currentState!.validate()) return;
+                          final body = {
+                            'name': nameCtrl.text.trim(),
+                            'description': descCtrl.text.trim(),
+                            'category': categoryCtrl.text.trim(),
+                            'duration_minutes': int.parse(durCtrl.text.trim()),
+                            'price': double.parse(priceCtrl.text.trim()),
+                          };
+                          if (existing == null) {
+                            await _api.post(ApiConstants.services, body);
+                          } else {
+                            await _api.put(
+                              '${ApiConstants.services}/${existing.id}',
+                              body,
+                            );
+                          }
+                          if (ctx.mounted) Navigator.pop(ctx);
+                          _load();
+                          if (existing == null && mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Service created! Slots auto-generated for the next 30 days.',
+                                ),
+                                backgroundColor: AppColors.success,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          }
+                        },
+                        child: Text(existing == null ? 'Add' : 'Save'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (!form.currentState!.validate()) return;
-              final body = {
-                'name':             nameCtrl.text.trim(),
-                'description':      descCtrl.text.trim(),
-                'category':         categoryCtrl.text.trim(),
-                'duration_minutes': int.parse(durCtrl.text.trim()),
-                'price':            double.parse(priceCtrl.text.trim()),
-              };
-              if (existing == null) {
-                await _api.post(ApiConstants.services, body);
-              } else {
-                await _api.put('${ApiConstants.services}/${existing.id}', body);
-              }
-              if (ctx.mounted) Navigator.pop(ctx);
-              _load();
-              if (existing == null && mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                        'Service created! Slots auto-generated for the next 30 days.'),
-                    backgroundColor: AppColors.success,
-                    duration: Duration(seconds: 3),
-                  ),
-                );
-              }
-            },
-            child: Text(existing == null ? 'Add' : 'Save'),
-          ),
-        ],
       ),
     );
   }
 
   Future<void> _toggleActive(ServiceModel s) async {
     try {
-      await _api.put(
-          '${ApiConstants.services}/${s.id}', {'is_active': !s.isActive});
-      await _load();  // reload so updated state reflects immediately
+      await _api.put('${ApiConstants.services}/${s.id}', {
+        'is_active': !s.isActive,
+      });
+      await _load(); // reload so updated state reflects immediately
     } catch (_) {}
   }
 
@@ -187,8 +241,9 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(ctx, true),
@@ -206,7 +261,7 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final c        = Theme.of(context).extension<SlotWiseColors>()!;
+    final c = Theme.of(context).extension<SlotWiseColors>()!;
     final filtered = _filtered;
 
     return Scaffold(
@@ -245,7 +300,9 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
                     Text(
                       '• ${_services.where((s) => s.isActive).length} active',
                       style: const TextStyle(
-                          fontSize: 12, color: AppColors.success),
+                        fontSize: 12,
+                        color: AppColors.success,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -259,8 +316,8 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
                 Row(
                   children: _ServiceFilter.values.map((f) {
                     final label = switch (f) {
-                      _ServiceFilter.all      => 'All',
-                      _ServiceFilter.active   => 'Active',
+                      _ServiceFilter.all => 'All',
+                      _ServiceFilter.active => 'Active',
                       _ServiceFilter.inactive => 'Inactive',
                     };
                     final selected = _filter == f;
@@ -271,7 +328,9 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 180),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 7),
+                            horizontal: 14,
+                            vertical: 7,
+                          ),
                           decoration: BoxDecoration(
                             color: selected ? c.primaryColor : c.accentSoft,
                             borderRadius: BorderRadius.circular(20),
@@ -333,7 +392,11 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
                         '• A 30-min service gets 16 slots/day. A 5-hour service gets 1 slot/day.\n'
                         '• To extend beyond 30 days, go to Manage Slots → pick the service → pick a future date → add slots manually.\n'
                         '• Deleted slots can be re-added from Manage Slots the same way.',
-                        style: TextStyle(fontSize: 11, color: c.primaryColor.withOpacity(0.8), height: 1.5),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: c.primaryColor.withOpacity(0.8),
+                          height: 1.5,
+                        ),
                       ),
                     ],
                   ),
@@ -346,44 +409,48 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
           // ── Service list ─────────────────────────────────────
           Expanded(
             child: _isLoading
-                ? Center(child: CircularProgressIndicator(color: c.primaryColor))
+                ? Center(
+                    child: CircularProgressIndicator(color: c.primaryColor),
+                  )
                 : filtered.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.design_services_outlined,
-                                size: 56,
-                                color: c.primaryColor.withOpacity(0.3)),
-                            const SizedBox(height: 12),
-                            Text(
-                              _filter == _ServiceFilter.inactive
-                                  ? 'No inactive services'
-                                  : _filter == _ServiceFilter.active
-                                      ? 'No active services'
-                                      : 'No services yet. Tap + to add one.',
-                              style: TextStyle(color: Colors.grey[500]),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.design_services_outlined,
+                          size: 56,
+                          color: c.primaryColor.withOpacity(0.3),
                         ),
-                      )
-                    : RefreshIndicator(
-                        color: c.primaryColor,
-                        onRefresh: _load,
-                        child: ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
-                          itemCount: filtered.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 8),
-                          itemBuilder: (ctx, i) => _ServiceCard(
-                            service: filtered[i],
-                            primaryColor: c.primaryColor,
-                            accentSoft: c.accentSoft,
-                            onEdit:   () => _showAddEditDialog(filtered[i]),
-                            onToggle: () => _toggleActive(filtered[i]),
-                            onDelete: () => _deleteService(filtered[i]),
-                          ),
+                        const SizedBox(height: 12),
+                        Text(
+                          _filter == _ServiceFilter.inactive
+                              ? 'No inactive services'
+                              : _filter == _ServiceFilter.active
+                              ? 'No active services'
+                              : 'No services yet. Tap + to add one.',
+                          style: TextStyle(color: Colors.grey[500]),
                         ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    color: c.primaryColor,
+                    onRefresh: _load,
+                    child: ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (ctx, i) => _ServiceCard(
+                        service: filtered[i],
+                        primaryColor: c.primaryColor,
+                        accentSoft: c.accentSoft,
+                        onEdit: () => _showAddEditDialog(filtered[i]),
+                        onToggle: () => _toggleActive(filtered[i]),
+                        onDelete: () => _deleteService(filtered[i]),
                       ),
+                    ),
+                  ),
           ),
         ],
       ),
@@ -394,8 +461,8 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
 // ── Service card ──────────────────────────────────────────────────────────────
 class _ServiceCard extends StatelessWidget {
   final ServiceModel service;
-  final Color        primaryColor;
-  final Color        accentSoft;
+  final Color primaryColor;
+  final Color accentSoft;
   final VoidCallback onEdit;
   final VoidCallback onToggle;
   final VoidCallback onDelete;
@@ -458,7 +525,9 @@ class _ServiceCard extends StatelessWidget {
                         // Active/inactive badge
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: isActive
                                 ? AppColors.success.withOpacity(0.1)
@@ -470,7 +539,9 @@ class _ServiceCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
-                              color: isActive ? AppColors.success : Colors.orange,
+                              color: isActive
+                                  ? AppColors.success
+                                  : Colors.orange,
                             ),
                           ),
                         ),
@@ -479,26 +550,27 @@ class _ServiceCard extends StatelessWidget {
                     const SizedBox(height: 4),
 
                     // Category chip
-                    if (service.category != null && service.category!.isNotEmpty)
+                    if (service.category != null &&
+                        service.category!.isNotEmpty)
                       Container(
                         margin: const EdgeInsets.only(bottom: 4),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: primaryColor.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           service.category!,
-                          style: TextStyle(
-                              fontSize: 10, color: primaryColor),
+                          style: TextStyle(fontSize: 10, color: primaryColor),
                         ),
                       ),
 
                     Text(
                       '${service.formattedDuration}  ·  ${service.formattedPrice}',
-                      style: TextStyle(
-                          fontSize: 12, color: Colors.grey[500]),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                     ),
                   ],
                 ),
@@ -516,22 +588,32 @@ class _ServiceCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.edit_outlined,
-                            size: 18, color: primaryColor),
+                        icon: Icon(
+                          Icons.edit_outlined,
+                          size: 18,
+                          color: primaryColor,
+                        ),
                         tooltip: 'Edit',
                         onPressed: onEdit,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(
-                            minWidth: 32, minHeight: 32),
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete_outline,
-                            size: 18, color: Colors.red),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          size: 18,
+                          color: Colors.red,
+                        ),
                         tooltip: 'Delete',
                         onPressed: onDelete,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(
-                            minWidth: 32, minHeight: 32),
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
                       ),
                     ],
                   ),

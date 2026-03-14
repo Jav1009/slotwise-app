@@ -16,6 +16,7 @@ import '../core/constants/api_constants.dart';
 class BookingProvider extends ChangeNotifier {
   List<BookingModel> _bookings  = [];
   bool               _isLoading = false;
+  bool               _disposed  = false;
   String?            _error;
 
   List<BookingModel> get bookings  => _bookings;
@@ -30,9 +31,16 @@ class BookingProvider extends ChangeNotifier {
 
   final _api = ApiService();
 
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
   // ── FETCH MY BOOKINGS ──────────────────────────────────────
   // GET /api/bookings/my
   Future<void> fetchMyBookings() async {
+    if (_disposed) return;
     _isLoading = true; notifyListeners();
     try {
       final res  = await _api.get(ApiConstants.myBookings);
@@ -46,9 +54,11 @@ class BookingProvider extends ChangeNotifier {
       // Client-side: mark overdue bookings as missed on the backend
       await _markOverdueAsMissed();
     } catch (e) {
-      _error = 'Could not load bookings.';
+      // Silently ignore 401 — happens when polling fires just after logout
+      final isAuthError = e.toString().contains('401') || e.toString().contains('403');
+      if (!isAuthError) _error = 'Could not load bookings.';
     } finally {
-      _isLoading = false; notifyListeners();
+      _isLoading = false; if (!_disposed) notifyListeners();
     }
   }
 
@@ -73,7 +83,7 @@ class BookingProvider extends ChangeNotifier {
         _bookings  = list
             .map((j) => BookingModel.fromJson(j as Map<String, dynamic>))
             .toList();
-        notifyListeners();
+        if (!_disposed) notifyListeners();
       } catch (_) {}
     }
   }
@@ -99,7 +109,7 @@ class BookingProvider extends ChangeNotifier {
       _error = 'Booking failed. This slot may no longer be available.';
       return false;
     } finally {
-      _isLoading = false; notifyListeners();
+      _isLoading = false; if (!_disposed) notifyListeners();
     }
   }
 
@@ -112,7 +122,7 @@ class BookingProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       _error = 'Cancellation failed.';
-      notifyListeners();
+      if (!_disposed) notifyListeners();
       return false;
     }
   }
@@ -136,7 +146,7 @@ class BookingProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     } finally {
-      _isLoading = false; notifyListeners();
+      if (!_disposed) _isLoading = false; notifyListeners();
     }
   }
 }

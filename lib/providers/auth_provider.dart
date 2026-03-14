@@ -144,22 +144,43 @@ class AuthProvider extends ChangeNotifier {
   //     // Tell backend to clear FCM token (fire-and-forget — don't block logout on failure)
   //     await _api.post('/auth/logout', {});
   //   } catch (_) {}
-
+//
   //   await StorageService.deleteToken();
   //   _user = null;
   //   notifyListeners();
   // }
 
+  // Future<void> logout() async {
+  //   // Clear local state FIRST so the UI transitions to LoginScreen immediately.
+  //   // Never block the user waiting for a network call to complete.
+  //   await StorageService.deleteToken();
+  //   _user = null;
+  //   notifyListeners();
+ //
+  //   // Fire-and-forget: tell backend to clear FCM token.
+  //   // Wrapped in try/catch so a slow or failed request never hangs the app.
+  //   _api.post('/auth/logout', {}).catchError((_) {});
+  // }
+
   Future<void> logout() async {
-    // Clear local state FIRST so the UI transitions to LoginScreen immediately.
-    // Never block the user waiting for a network call to complete.
+    // Capture token BEFORE deleting it — the backend needs it to clear the FCM token.
+    // If we delete first, ApiService has nothing to put in the Authorization header.
+    final token = await StorageService.getToken();
+ 
+    // Clear local state immediately so the UI transitions to LoginScreen.
     await StorageService.deleteToken();
     _user = null;
     notifyListeners();
  
     // Fire-and-forget: tell backend to clear FCM token.
-    // Wrapped in try/catch so a slow or failed request never hangs the app.
-    _api.post('/auth/logout', {}).catchError((_) {});
+    // Pass token explicitly since storage is already cleared.
+    if (token != null) {
+      _api.post(
+        '/auth/logout',
+        {},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      ).catchError((e) => Response(requestOptions: RequestOptions(path: '/auth/logout')));
+    }
   }
 
   // ── REFRESH USER (after profile edit) ─────────────────────

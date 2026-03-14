@@ -12,9 +12,16 @@
 //   • Missed stat card added
 //   • Today's booking tiles show formatted date (MMM d, yyyy)
 //   • WidgetsBindingObserver: refreshes when app returns to foreground
+//   • Logout button: calls auth.logout() then Navigator.pushNamedAndRemoveUntil('/login')
+//     Root cause of stuck spinner — logout() only cleared _user, but the navigator
+//     stack still had /staff on top of /. The Consumer<AuthProvider> at home: updated
+//     the widget at / to LoginScreen, but /staff was never popped so it stayed visible.
+//   • build(): user is read as nullable (user?) with null-guard — prevents the
+//     force-unwrap crash during the one frame before navigation completes.
  
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:slot_wise_booking/routes/routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_colors.dart';
 import '../../models/booking_model.dart';
@@ -35,6 +42,18 @@ class StaffDashboardScreen extends StatefulWidget {
 }
 
 class _StaffDashboardScreenState extends State<StaffDashboardScreen> with WidgetsBindingObserver {
+  
+  // Saved references — safe to call in dispose()
+  AdminProvider?        _adminProvider;
+  NotificationProvider? _notificationProvider;
+ 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _adminProvider        = context.read<AdminProvider>();
+    _notificationProvider = context.read<NotificationProvider>();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -49,8 +68,10 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> with Widget
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && mounted) {
-      context.read<AdminProvider>().fetchDashboardData();
-      context.read<NotificationProvider>().fetchNotifications();
+      // context.read<AdminProvider>().fetchDashboardData();
+      // context.read<NotificationProvider>().fetchNotifications();
+      _adminProvider?.fetchDashboardData();
+      _notificationProvider?.fetchNotifications();
     }
   }
  
@@ -58,8 +79,10 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> with Widget
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     // Stop polling when leaving dashboard
-    context.read<AdminProvider>().stopPolling();
-    context.read<NotificationProvider>().stopPolling();
+    // context.read<AdminProvider>().stopPolling();
+    // context.read<NotificationProvider>().stopPolling();
+     _adminProvider?.stopPolling();
+    _notificationProvider?.stopPolling();
     super.dispose();
   }
 
@@ -125,7 +148,10 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> with Widget
   @override
   Widget build(BuildContext context) {
     final c    = Theme.of(context).extension<SlotWiseColors>()!;
-    final user = context.watch<AuthProvider>().user!;
+    // user can briefly be null during logout — return empty scaffold for that one frame
+    // Flutter's home Consumer<AuthProvider> will immediately replace this with LoginScreen
+    final user = context.watch<AuthProvider>().user;
+    if (user == null) return const Scaffold(body: SizedBox.shrink());
 
     return Scaffold(
       appBar: AppBar(
@@ -141,6 +167,14 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> with Widget
             onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ProfileScreen())),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            tooltip: 'Sign out',
+            onPressed: () async {
+              await context.read<AuthProvider>().logout();
+              if (context.mounted) context.goLogin();
+            },
           ),
         ],
       ),

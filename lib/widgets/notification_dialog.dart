@@ -30,6 +30,7 @@ class NotificationDialog extends StatefulWidget {
   static void show(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isDismissible: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => ChangeNotifierProvider.value(
