@@ -123,6 +123,7 @@ app.*.map.json
 coverage/
 *.lcov
 
+frontend.zip
 # ============================================
 # EXCEPTIONS TO IGNORE
 # ============================================

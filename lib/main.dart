@@ -1,40 +1,55 @@
 // lib/main.dart
+
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'package:slotwise/data/services/fcm_service.dart';
+import 'package:slotwise/providers/notification_provider.dart';
+import 'package:slotwise/providers/theme_provider.dart';
 import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/auth_provider.dart';
 import 'providers/service_provider.dart';
 import 'providers/booking_provider.dart';
-import 'providers/admin_provider.dart'; // ✅ FIXED: was missing
+import 'providers/admin_provider.dart';
 import 'features/splash/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  runApp(const MyApp());
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await FCMService().initialize();
+
+  // Load saved theme preference before the first frame
+  final themeProvider = ThemeProvider();
+  await themeProvider.loadFromPrefs();
+
+  runApp(MyApp(themeProvider: themeProvider));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final ThemeProvider themeProvider;
+  const MyApp({super.key, required this.themeProvider});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider.value(value: themeProvider),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ServiceProvider()),
         ChangeNotifierProvider(create: (_) => BookingProvider()),
-        ChangeNotifierProvider(create: (_) => AdminProvider()), // ✅ FIXED: was missing
+        ChangeNotifierProvider(create: (_) => AdminProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
-      child: MaterialApp(
-        title: 'SlotWise',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        home: const SplashScreen(),
+      child: Consumer<ThemeProvider>(
+        builder: (_, theme, __) => MaterialApp(
+          title: 'SlotWise',
+          debugShowCheckedModeBanner: false,
+          theme:      AppTheme.lightTheme,
+          darkTheme:  AppTheme.darkTheme,
+          themeMode:  theme.themeMode,   // switches live when toggled
+          home: const SplashScreen(),
+        ),
       ),
     );
   }

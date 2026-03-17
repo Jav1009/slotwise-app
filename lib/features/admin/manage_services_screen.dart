@@ -1,6 +1,7 @@
 // lib/features/admin/manage_services_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:slotwise/widgets/admin_theme_wrapper.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/service_model.dart';
 import '../../providers/service_provider.dart';
@@ -73,71 +74,73 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Manage Services'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openServiceForm(),
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Add Service',
-            style: TextStyle(color: Colors.white)),
-      ),
-      body: RefreshIndicator(
-        onRefresh: () => context.read<ServiceProvider>().fetchServices(),
-        child: Builder(
-          builder: (context) {
-            final provider = context.watch<ServiceProvider>();
-            if (provider.isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (provider.error != null) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline,
-                        size: 48, color: AppColors.error),
-                    const SizedBox(height: 12),
-                    Text(provider.error!,
-                        style: const TextStyle(color: AppColors.textSecondary),
-                        textAlign: TextAlign.center),
-                    const SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: () =>
-                          context.read<ServiceProvider>().fetchServices(),
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white),
-                    ),
-                  ],
-                ),
-              );
-            }
-            if (provider.services.isEmpty) {
-              return _EmptyState(onAdd: () => _openServiceForm());
-            }
-            return ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
-              itemCount: provider.services.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 10),
-              itemBuilder: (ctx, i) {
-                final svc = provider.services[i];
-                return _ServiceTile(
-                  service:  svc,
-                  onEdit:   () => _openServiceForm(service: svc),
-                  onDelete: () => _confirmDelete(svc),
+    return AdminThemeWrapper(
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text('Manage Services'),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => _openServiceForm(),
+          backgroundColor: AppColors.primary,
+          icon: const Icon(Icons.add, color: Colors.white),
+          label: const Text('Add Service',
+              style: TextStyle(color: Colors.white)),
+        ),
+        body: RefreshIndicator(
+          onRefresh: () => context.read<ServiceProvider>().fetchServices(),
+          child: Builder(
+            builder: (context) {
+              final provider = context.watch<ServiceProvider>();
+              if (provider.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (provider.error != null) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline,
+                          size: 48, color: AppColors.error),
+                      const SizedBox(height: 12),
+                      Text(provider.error!,
+                          style: const TextStyle(color: AppColors.textSecondary),
+                          textAlign: TextAlign.center),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () =>
+                            context.read<ServiceProvider>().fetchServices(),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white),
+                      ),
+                    ],
+                  ),
                 );
-              },
-            );
-          },
+              }
+              if (provider.services.isEmpty) {
+                return _EmptyState(onAdd: () => _openServiceForm());
+              }
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+                itemCount: provider.services.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
+                itemBuilder: (ctx, i) {
+                  final svc = provider.services[i];
+                  return _ServiceTile(
+                    service:  svc,
+                    onEdit:   () => _openServiceForm(service: svc),
+                    onDelete: () => _confirmDelete(svc),
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     );

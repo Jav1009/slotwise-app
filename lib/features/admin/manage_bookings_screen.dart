@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:slotwise/widgets/admin_theme_wrapper.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/admin_provider.dart';
 import '../../core/utils/snackbar_utils.dart';
@@ -64,119 +65,121 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('All Bookings'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          // ── Filter Chips ───────────────────────────────────
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _filters.map((f) {
-                  final isActive = _selectedFilter == f;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      label: Text(f == 'all' ? 'All' : _capitalize(f)),
-                      selected: isActive,
-                      onSelected: (_) {
-                        setState(() => _selectedFilter = f);
-                        _loadBookings();
-                      },
-                      selectedColor: AppColors.primary.withValues(alpha: 0.15),
-                      checkmarkColor: AppColors.primary,
-                      labelStyle: TextStyle(
-                        color: isActive ? AppColors.primary : Colors.grey[700],
-                        fontWeight:
-                            isActive ? FontWeight.bold : FontWeight.normal,
+    return AdminThemeWrapper(
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text('All Bookings'),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        body: Column(
+          children: [
+            // ── Filter Chips ───────────────────────────────────
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: _filters.map((f) {
+                    final isActive = _selectedFilter == f;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        label: Text(f == 'all' ? 'All' : _capitalize(f)),
+                        selected: isActive,
+                        onSelected: (_) {
+                          setState(() => _selectedFilter = f);
+                          _loadBookings();
+                        },
+                        selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                        checkmarkColor: AppColors.primary,
+                        labelStyle: TextStyle(
+                          color: isActive ? AppColors.primary : Colors.grey[700],
+                          fontWeight:
+                              isActive ? FontWeight.bold : FontWeight.normal,
+                        ),
                       ),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
-          ),
-
-          // ── Booking List ── ✅ Builder for correct context scope
-          Expanded(
-            child: Builder(
-              builder: (ctx) {
-                final admin = ctx.watch<AdminProvider>();
-
-                if (admin.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (admin.error != null && admin.bookings.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline,
-                            size: 48, color: AppColors.error),
-                        const SizedBox(height: 8),
-                        Text(admin.error!,
-                            style: const TextStyle(
-                                color: AppColors.textSecondary),
-                            textAlign: TextAlign.center),
-                        const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: _loadBookings,
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Retry'),
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white),
-                        ),
-                      ],
+      
+            // ── Booking List ── ✅ Builder for correct context scope
+            Expanded(
+              child: Builder(
+                builder: (ctx) {
+                  final admin = ctx.watch<AdminProvider>();
+      
+                  if (admin.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+      
+                  if (admin.error != null && admin.bookings.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.error_outline,
+                              size: 48, color: AppColors.error),
+                          const SizedBox(height: 8),
+                          Text(admin.error!,
+                              style: const TextStyle(
+                                  color: AppColors.textSecondary),
+                              textAlign: TextAlign.center),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: _loadBookings,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Retry'),
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+      
+                  if (admin.bookings.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.inbox_outlined,
+                              size: 56, color: Colors.grey[400]),
+                          const SizedBox(height: 8),
+                          Text('No bookings found',
+                              style: TextStyle(
+                                  color: Colors.grey[600], fontSize: 16)),
+                        ],
+                      ),
+                    );
+                  }
+      
+                  return RefreshIndicator(
+                    onRefresh: () async => _loadBookings(),
+                    child: ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: admin.bookings.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 10),
+                      itemBuilder: (_, i) {
+                        final booking = admin.bookings[i];
+                        return _AdminBookingCard(
+                          booking: booking,
+                          onTap: () => _openStatusSheet(booking),
+                        );
+                      },
                     ),
                   );
-                }
-
-                if (admin.bookings.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.inbox_outlined,
-                            size: 56, color: Colors.grey[400]),
-                        const SizedBox(height: 8),
-                        Text('No bookings found',
-                            style: TextStyle(
-                                color: Colors.grey[600], fontSize: 16)),
-                      ],
-                    ),
-                  );
-                }
-
-                return RefreshIndicator(
-                  onRefresh: () async => _loadBookings(),
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: admin.bookings.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
-                    itemBuilder: (_, i) {
-                      final booking = admin.bookings[i];
-                      return _AdminBookingCard(
-                        booking: booking,
-                        onTap: () => _openStatusSheet(booking),
-                      );
-                    },
-                  ),
-                );
-              },
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

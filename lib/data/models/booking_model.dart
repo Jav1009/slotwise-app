@@ -1,23 +1,20 @@
 // lib/data/models/booking_model.dart
 // Booking data model
 
+
 import 'package:intl/intl.dart';
 import '../../core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class BookingModel {
   final int id;
-  final String status; // 'pending', 'confirmed', 'cancelled', 'completed'
+  final String status;
   final String? notes;
   final DateTime createdAt;
   final DateTime? cancelledAt;
-
-  // Service details
   final String serviceName;
   final int? durationMinutes;
   final double price;
-
-  // Slot details
   final DateTime date;
   final String startTime;
   final String endTime;
@@ -36,7 +33,6 @@ class BookingModel {
     required this.endTime,
   });
 
-  // Status display text
   String get statusText {
     switch (status) {
       case 'pending':
@@ -52,7 +48,6 @@ class BookingModel {
     }
   }
 
-  // Status color
   Color get statusColor {
     switch (status) {
       case 'pending':
@@ -68,7 +63,6 @@ class BookingModel {
     }
   }
 
-  // Check if booking is in the future
   bool get isFuture {
     final now = DateTime.now();
     final bookingDateTime = DateTime(
@@ -81,48 +75,30 @@ class BookingModel {
     return bookingDateTime.isAfter(now);
   }
 
-  // Check if booking can be cancelled
-  bool get canBeCancelled {
-    return (status == 'pending' || status == 'confirmed') && isFuture;
-  }
+  bool get canBeCancelled =>
+      (status == 'pending' || status == 'confirmed') && isFuture;
 
-  // Format date as "Monday, Jan 15, 2026"
-  String get formattedDate {
-    return DateFormat('EEEE, MMM d, y').format(date);
-  }
+  String get formattedDate => DateFormat('EEEE, MMM d, y').format(date);
 
-  // Format time range
-  String get formattedTimeRange {
-    final start = _formatTime(startTime);
-    final end = _formatTime(endTime);
-    return '$start - $end';
-  }
+  String get formattedTimeRange =>
+      '${_formatTime(startTime)} - ${_formatTime(endTime)}';
 
-  // Format price
   String get formattedPrice => '\$${price.toStringAsFixed(2)}';
 
-  // Helper to format time
   String _formatTime(String time24) {
     try {
       final parts = time24.split(':');
       final hour = int.parse(parts[0]);
       final minute = parts[1];
-
-      if (hour == 0) {
-        return '12:$minute AM';
-      } else if (hour < 12) {
-        return '$hour:$minute AM';
-      } else if (hour == 12) {
-        return '12:$minute PM';
-      } else {
-        return '${hour - 12}:$minute PM';
-      }
+      if (hour == 0) return '12:$minute AM';
+      if (hour < 12) return '$hour:$minute AM';
+      if (hour == 12) return '12:$minute PM';
+      return '${hour - 12}:$minute PM';
     } catch (e) {
       return time24;
     }
   }
 
-  // From JSON
   factory BookingModel.fromJson(Map<String, dynamic> json) {
     return BookingModel(
       id: json['id'] as int,
@@ -134,6 +110,7 @@ class BookingModel {
           : null,
       serviceName: json['service_name'] as String,
       durationMinutes: json['duration_minutes'] as int?,
+      // ✅ FIX: MySQL DECIMAL comes back as String "25.00" over JSON.
       price: double.parse(json['price'].toString()),
       date: DateTime.parse(json['date'] as String),
       startTime: json['start_time'] as String,
@@ -141,7 +118,6 @@ class BookingModel {
     );
   }
 
-  // To JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -159,7 +135,6 @@ class BookingModel {
   }
 
   @override
-  String toString() {
-    return 'BookingModel(id: $id, service: $serviceName, status: $status)';
-  }
+  String toString() =>
+      'BookingModel(id: $id, service: $serviceName, status: $status)';
 }

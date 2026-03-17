@@ -8,6 +8,7 @@ import '../data/services/api_service.dart';
 import '../core/constants/api_constants.dart';
 
 // ── AdminStats model ──────────────────────────────────────────
+
 class AdminStats {
   final int todayBookings;
   final int totalBookings;
@@ -28,7 +29,6 @@ class AdminStats {
   factory AdminStats.fromJson(Map<String, dynamic> j) => AdminStats(
     todayBookings: j['todayBookings'] ?? 0,
     totalBookings: j['totalBookings'] ?? 0,
-    // ✅ FIX: MySQL SUM() returns a String over JSON, not a num.
     totalRevenue: double.parse((j['totalRevenue'] ?? 0).toString()),
     activeServices: j['activeServices'] ?? 0,
     pendingBookings: j['pendingBookings'] ?? 0,
@@ -39,6 +39,7 @@ class AdminStats {
 }
 
 // ── AdminBooking model ────────────────────────────────────────
+
 class AdminBooking {
   final int id;
   final String status;
@@ -70,8 +71,6 @@ class AdminBooking {
     customerName: j['customerName'],
     customerEmail: j['customerEmail'],
     serviceName: j['serviceName'],
-    // ✅ FIX: price comes back as String "500.00" from MySQL DECIMAL.
-    // Same fix as ServiceModel, BookingModel, and AdminStats.totalRevenue.
     price: double.parse((j['price'] ?? 0).toString()),
     date: j['date'],
     startTime: j['start_time'],
@@ -79,7 +78,6 @@ class AdminBooking {
     notes: j['notes'],
   );
 
-  /// Returns a copy with an updated status — used for optimistic UI updates
   AdminBooking copyWithStatus(String newStatus) => AdminBooking(
     id: id,
     status: newStatus,
@@ -95,6 +93,7 @@ class AdminBooking {
 }
 
 // ── AdminProvider ─────────────────────────────────────────────
+
 class AdminProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
 
@@ -103,13 +102,10 @@ class AdminProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
-  // Getters
   AdminStats? get stats => _stats;
   List<AdminBooking> get bookings => _bookings;
   bool get isLoading => _isLoading;
   String? get error => _error;
-
-  // ── Helpers ────────────────────────────────────────────────
 
   void _setLoading(bool v) {
     _isLoading = v;
@@ -118,14 +114,12 @@ class AdminProvider with ChangeNotifier {
 
   // ── Stats ──────────────────────────────────────────────────
 
-  /// Fetches overview statistics for the admin dashboard
   Future<void> fetchStats() async {
     await Future.microtask(() {
       _isLoading = true;
       _error = null;
       notifyListeners();
     });
-
     try {
       final res = await _apiService.get(ApiConstants.adminStats);
       _stats = AdminStats.fromJson(res.data['data']);
@@ -138,23 +132,22 @@ class AdminProvider with ChangeNotifier {
 
   // ── Bookings ───────────────────────────────────────────────
 
-  /// Fetches all bookings. Optionally filter by [status] and/or [date]
   Future<void> fetchAllBookings({String? status, String? date}) async {
     await Future.microtask(() {
       _isLoading = true;
       _error = null;
       notifyListeners();
     });
-
     try {
       final res = await _apiService.get(
         ApiConstants.adminBookings,
         queryParameters: {
           if (status != null && status != 'all') 'status': status,
-          'date': ?date,
+          if (date != null) 'date': date,
         },
       );
-      _bookings = (res.data['data'] as List)
+      // Matches { success: true, data: { bookings: [...] } }
+      _bookings = (res.data['data']['bookings'] as List)
           .map((b) => AdminBooking.fromJson(b))
           .toList();
     } catch (e) {
@@ -164,8 +157,32 @@ class AdminProvider with ChangeNotifier {
     }
   }
 
-  /// Updates a booking status. Optimistically updates local state
-  /// so the UI reflects the change without a full re-fetch.
+  // ── Bulk slot creation ─────────────────────────────────────
+
+  Future<void> bulkCreateSlots(List<Map<String, dynamic>> slots) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      await _apiService.post(
+        ApiConstants.bulkCreateSlots,
+        data: {'slots': slots},
+      );
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // ── Update booking status ──────────────────────────────────
+
+  /// Calls PUT /api/admin/bookings/:id/status
+  /// The backend (bookingController) handles sending the push notification
+  /// to the user automatically — nothing extra needed here.
   Future<bool> updateBookingStatus(int bookingId, String status) async {
     try {
       await _apiService.put(
@@ -173,15 +190,14 @@ class AdminProvider with ChangeNotifier {
         data: {'status': status},
       );
 
-      // Optimistic local update on the bookings list
+      // Optimistic local update so the UI reflects the change instantly
       final idx = _bookings.indexWhere((b) => b.id == bookingId);
       if (idx != -1) {
         _bookings[idx] = _bookings[idx].copyWithStatus(status);
         notifyListeners();
       }
 
-      // ✅ FIX: Re-fetch stats so revenue, pending count etc. reflect
-      // the new status immediately without a manual refresh.
+      // Re-fetch stats so revenue and pending count stay accurate
       fetchStats();
 
       return true;
@@ -192,7 +208,8 @@ class AdminProvider with ChangeNotifier {
     }
   }
 
-  /// Clears any stored error message
+  // ── Helpers ────────────────────────────────────────────────
+
   void clearError() {
     _error = null;
     notifyListeners();

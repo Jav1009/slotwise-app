@@ -1,6 +1,10 @@
 // lib/features/admin/manage_slots_screen.dart
+// Key addition: _BulkSlotSheet — generates slots at a chosen interval
+// across a time range, sends each to the backend, reports results.
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:slotwise/widgets/admin_theme_wrapper.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../../core/constants/app_colors.dart';
@@ -12,22 +16,18 @@ import '../../core/utils/snackbar_utils.dart';
 
 class ManageSlotsScreen extends StatefulWidget {
   const ManageSlotsScreen({super.key});
-
   @override
   State<ManageSlotsScreen> createState() => _ManageSlotsScreenState();
 }
 
 class _ManageSlotsScreenState extends State<ManageSlotsScreen> {
-  DateTime _focusedDay  = DateTime.now();
+  DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
-
-  // ✅ FIX: Guard flags — same pattern as ManageServicesScreen
   bool _servicesFetched = false;
-  bool _slotsFetched    = false;
+  bool _slotsFetched = false;
 
   String _fmtDate(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
 
-  // ✅ FIX: Use didChangeDependencies instead of initState + Future.microtask
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -37,14 +37,16 @@ class _ManageSlotsScreenState extends State<ManageSlotsScreen> {
     }
     if (!_slotsFetched) {
       _slotsFetched = true;
-      context.read<BookingProvider>().fetchAdminSlots(date: _fmtDate(_selectedDay));
+      context.read<BookingProvider>().fetchAdminSlots(
+        date: _fmtDate(_selectedDay),
+      );
     }
   }
 
   void _onDaySelected(DateTime selected, DateTime focused) {
     setState(() {
       _selectedDay = selected;
-      _focusedDay  = focused;
+      _focusedDay = focused;
     });
     context.read<BookingProvider>().fetchAdminSlots(date: _fmtDate(selected));
   }
@@ -54,7 +56,9 @@ class _ManageSlotsScreenState extends State<ManageSlotsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Slot?'),
-        content: Text('Delete the ${slot.startTime} slot? This cannot be undone.'),
+        content: Text(
+          'Delete the ${slot.startTime} slot? This cannot be undone.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -68,19 +72,17 @@ class _ManageSlotsScreenState extends State<ManageSlotsScreen> {
         ],
       ),
     );
-
-    if (!mounted) return;
-    if (confirmed != true) return;
-
+    if (!mounted || confirmed != true) return;
     final provider = context.read<BookingProvider>();
-    final success  = await provider.deleteSlot(slot.id);
-
+    final success = await provider.deleteSlot(slot.id);
     if (!mounted) return;
     if (success) {
       SnackbarUtils.showSuccess(context, 'Slot deleted');
     } else {
-      SnackbarUtils.showError(context, provider.error ?? 'Failed to delete slot');
-      // Re-fetch to restore accurate state after a failed delete
+      SnackbarUtils.showError(
+        context,
+        provider.error ?? 'Failed to delete slot',
+      );
       provider.fetchAdminSlots(date: _fmtDate(_selectedDay));
     }
   }
@@ -92,126 +94,179 @@ class _ManageSlotsScreenState extends State<ManageSlotsScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => _AddSlotSheet(
         selectedDate: _selectedDay,
-        onCreated: () =>
-            context.read<BookingProvider>().fetchAdminSlots(date: _fmtDate(_selectedDay)),
+        onCreated: () => context.read<BookingProvider>().fetchAdminSlots(
+          date: _fmtDate(_selectedDay),
+        ),
+      ),
+    );
+  }
+
+  void _openBulkSlot() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _BulkSlotSheet(
+        selectedDate: _selectedDay,
+        onCreated: () => context.read<BookingProvider>().fetchAdminSlots(
+          date: _fmtDate(_selectedDay),
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Manage Slots'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openAddSlot,
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Add Slot', style: TextStyle(color: Colors.white)),
-      ),
-      body: Column(
-        children: [
-          // ── Calendar ─────────────────────────────────────────
-          Container(
-            color: Colors.white,
-            child: TableCalendar(
-              firstDay: DateTime.now().subtract(const Duration(days: 30)),
-              lastDay:  DateTime.now().add(const Duration(days: 90)),
-              focusedDay:           _focusedDay,
-              selectedDayPredicate: (d) => isSameDay(d, _selectedDay),
-              onDaySelected:        _onDaySelected,
-              calendarStyle: CalendarStyle(
-                selectedDecoration: const BoxDecoration(
-                    color: AppColors.primary, shape: BoxShape.circle),
-                todayDecoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.3),
-                    shape: BoxShape.circle),
+    return AdminThemeWrapper(
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text('Manage Slots'),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        // Two FABs: single slot + bulk
+        floatingActionButton: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FloatingActionButton.small(
+              heroTag: 'single',
+              onPressed: _openAddSlot,
+              backgroundColor: Colors.white,
+              foregroundColor: AppColors.primary,
+              tooltip: 'Add single slot',
+              child: const Icon(Icons.add),
+            ),
+            const SizedBox(height: 8),
+            FloatingActionButton.extended(
+              heroTag: 'bulk',
+              onPressed: _openBulkSlot,
+              backgroundColor: AppColors.primary,
+              icon: const Icon(Icons.auto_awesome, color: Colors.white),
+              label: const Text(
+                'Bulk Add',
+                style: TextStyle(color: Colors.white),
               ),
-              headerStyle: const HeaderStyle(
-                  formatButtonVisible: false, titleCentered: true),
             ),
-          ),
-
-          // ── Slot List ─────────────────────────────────────────
-          // ✅ FIX: Builder gives a fresh BuildContext so context.watch works correctly
-          Expanded(
-            child: Builder(
-              builder: (ctx) {
-                final provider = ctx.watch<BookingProvider>();
-
-                if (provider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (provider.error != null && provider.adminSlots.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline,
-                            size: 48, color: AppColors.error),
-                        const SizedBox(height: 8),
-                        Text(provider.error!,
-                            style: const TextStyle(color: AppColors.textSecondary),
-                            textAlign: TextAlign.center),
-                        const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: () => ctx
-                              .read<BookingProvider>()
-                              .fetchAdminSlots(date: _fmtDate(_selectedDay)),
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Retry'),
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                if (provider.adminSlots.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.event_busy, size: 48, color: Colors.grey[400]),
-                        const SizedBox(height: 8),
-                        Text(
-                          'No slots for ${DateFormat('MMM d, yyyy').format(_selectedDay)}',
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return RefreshIndicator(
-                  onRefresh: () => ctx
-                      .read<BookingProvider>()
-                      .fetchAdminSlots(date: _fmtDate(_selectedDay)),
-                  child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
-                    itemCount: provider.adminSlots.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (_, i) {
-                      final slot = provider.adminSlots[i];
-                      return _SlotTile(
-                        slot:     slot,
-                        onDelete: () => _confirmDeleteSlot(slot),
-                      );
-                    },
+          ],
+        ),
+        body: Column(
+          children: [
+            // Calendar
+            Container(
+              color: Colors.white,
+              child: TableCalendar(
+                firstDay: DateTime.now().subtract(const Duration(days: 30)),
+                lastDay: DateTime.now().add(const Duration(days: 90)),
+                focusedDay: _focusedDay,
+                selectedDayPredicate: (d) => isSameDay(d, _selectedDay),
+                onDaySelected: _onDaySelected,
+                calendarStyle: CalendarStyle(
+                  selectedDecoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
                   ),
-                );
-              },
+                  todayDecoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.3),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                headerStyle: const HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                ),
+              ),
             ),
-          ),
-        ],
+            // Slot list
+            Expanded(
+              child: Builder(
+                builder: (ctx) {
+                  final provider = ctx.watch<BookingProvider>();
+                  if (provider.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (provider.error != null && provider.adminSlots.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: AppColors.error,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            provider.error!,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () => ctx
+                                .read<BookingProvider>()
+                                .fetchAdminSlots(date: _fmtDate(_selectedDay)),
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Retry'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  if (provider.adminSlots.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.event_busy,
+                            size: 48,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'No slots for ${DateFormat('MMM d, yyyy').format(_selectedDay)}',
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                          const SizedBox(height: 12),
+                          TextButton.icon(
+                            onPressed: _openBulkSlot,
+                            icon: const Icon(Icons.auto_awesome),
+                            label: const Text('Bulk-add slots for this day'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return RefreshIndicator(
+                    onRefresh: () => ctx.read<BookingProvider>().fetchAdminSlots(
+                      date: _fmtDate(_selectedDay),
+                    ),
+                    child: ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+                      itemCount: provider.adminSlots.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (_, i) {
+                        final slot = provider.adminSlots[i];
+                        return _SlotTile(
+                          slot: slot,
+                          onDelete: () => _confirmDeleteSlot(slot),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -226,8 +281,7 @@ class _SlotTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isBooked = !slot.isAvailable;
-
+    final isBooked = !slot.isAvailable;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -235,16 +289,9 @@ class _SlotTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: isBooked
-              ? Colors.orange.withValues(alpha: 0.4)
-              : Colors.green.withValues(alpha: 0.4),
+              ? Colors.orange.withOpacity(0.4)
+              : Colors.green.withOpacity(0.4),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
       ),
       child: Row(
         children: [
@@ -263,12 +310,18 @@ class _SlotTile extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
             ),
           ),
+          if (slot.serviceName != null)
+            Text(
+              slot.serviceName!,
+              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+            ),
+          const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: isBooked
-                  ? Colors.orange.withValues(alpha: 0.1)
-                  : Colors.green.withValues(alpha: 0.1),
+                  ? Colors.orange.withOpacity(0.1)
+                  : Colors.green.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -282,8 +335,11 @@ class _SlotTile extends StatelessWidget {
           ),
           if (!isBooked)
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-              tooltip: 'Delete slot',
+              icon: const Icon(
+                Icons.delete_outline,
+                color: Colors.red,
+                size: 20,
+              ),
               onPressed: onDelete,
             ),
         ],
@@ -292,13 +348,12 @@ class _SlotTile extends StatelessWidget {
   }
 }
 
-// ── Add Slot Bottom Sheet ─────────────────────────────────────
+// ── Single Slot Sheet ─────────────────────────────────────────
 
 class _AddSlotSheet extends StatefulWidget {
   final DateTime selectedDate;
   final VoidCallback onCreated;
   const _AddSlotSheet({required this.selectedDate, required this.onCreated});
-
   @override
   State<_AddSlotSheet> createState() => _AddSlotSheetState();
 }
@@ -306,7 +361,7 @@ class _AddSlotSheet extends StatefulWidget {
 class _AddSlotSheetState extends State<_AddSlotSheet> {
   ServiceModel? _selectedService;
   TimeOfDay _startTime = const TimeOfDay(hour: 9, minute: 0);
-  TimeOfDay _endTime   = const TimeOfDay(hour: 10, minute: 0);
+  TimeOfDay _endTime = const TimeOfDay(hour: 10, minute: 0);
   bool _isLoading = false;
 
   String _fmtTime(TimeOfDay t) =>
@@ -317,9 +372,8 @@ class _AddSlotSheetState extends State<_AddSlotSheet> {
       context: context,
       initialTime: isStart ? _startTime : _endTime,
     );
-    if (picked != null) {
+    if (picked != null)
       setState(() => isStart ? _startTime = picked : _endTime = picked);
-    }
   }
 
   Future<void> _submit() async {
@@ -327,36 +381,302 @@ class _AddSlotSheetState extends State<_AddSlotSheet> {
       SnackbarUtils.showError(context, 'Please select a service');
       return;
     }
-
     setState(() => _isLoading = true);
-
     final provider = context.read<BookingProvider>();
-    final success  = await provider.createSlot(
+    final success = await provider.createSlot(
       serviceId: _selectedService!.id,
-      date:      DateFormat('yyyy-MM-dd').format(widget.selectedDate),
+      date: DateFormat('yyyy-MM-dd').format(widget.selectedDate),
       startTime: _fmtTime(_startTime),
-      endTime:   _fmtTime(_endTime),
+      endTime: _fmtTime(_endTime),
     );
-
     if (!mounted) return;
     setState(() => _isLoading = false);
-
     if (success) {
       Navigator.pop(context);
       widget.onCreated();
       SnackbarUtils.showSuccess(context, 'Slot created');
     } else {
-      SnackbarUtils.showError(context, provider.error ?? 'Failed to create slot');
+      SnackbarUtils.showError(
+        context,
+        provider.error ?? 'Failed to create slot',
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final services  = context.watch<ServiceProvider>().services;
+    final services = context.watch<ServiceProvider>().services;
+    final dateLabel = DateFormat('EEE, MMM d yyyy').format(widget.selectedDate);
+    return _SheetWrapper(
+      title: 'Add Slot',
+      subtitle: dateLabel,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DropdownButtonFormField<ServiceModel>(
+            value: _selectedService,
+            hint: const Text('Select Service'),
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Service',
+            ),
+            items: services
+                .map((s) => DropdownMenuItem(value: s, child: Text(s.name)))
+                .toList(),
+            onChanged: (v) => setState(() => _selectedService = v),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _TimePicker(
+                  label: 'Start Time',
+                  time: _startTime,
+                  onTap: () => _pickTime(isStart: true),
+                  context: context,
+                ),
+              ),
+              Expanded(
+                child: _TimePicker(
+                  label: 'End Time',
+                  time: _endTime,
+                  onTap: () => _pickTime(isStart: false),
+                  context: context,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _SubmitButton(
+            isLoading: _isLoading,
+            label: 'Create Slot',
+            onPressed: _submit,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Bulk Slot Sheet ───────────────────────────────────────────
+
+class _BulkSlotSheet extends StatefulWidget {
+  final DateTime selectedDate;
+  final VoidCallback onCreated;
+  const _BulkSlotSheet({required this.selectedDate, required this.onCreated});
+  @override
+  State<_BulkSlotSheet> createState() => _BulkSlotSheetState();
+}
+
+class _BulkSlotSheetState extends State<_BulkSlotSheet> {
+  ServiceModel? _selectedService;
+  TimeOfDay _from = const TimeOfDay(hour: 9, minute: 0);
+  TimeOfDay _to = const TimeOfDay(hour: 17, minute: 0);
+  int _interval = 30; // minutes between slots
+  bool _isLoading = false;
+  String? _resultMessage;
+
+  final _intervals = [15, 20, 30, 45, 60, 90, 120];
+
+  String _fmtTime(TimeOfDay t) =>
+      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:00';
+
+  /// Generates start/end pairs from _from to _to with _interval spacing.
+  List<(TimeOfDay, TimeOfDay)> _generateSlots() {
+    final slots = <(TimeOfDay, TimeOfDay)>[];
+    var current = _from;
+    while (true) {
+      final totalStart = current.hour * 60 + current.minute;
+      final totalEnd = totalStart + _interval;
+      final endHour = totalEnd ~/ 60;
+      final endMin = totalEnd % 60;
+
+      // Stop if end exceeds _to
+      final toTotal = _to.hour * 60 + _to.minute;
+      if (totalEnd > toTotal) break;
+
+      slots.add((current, TimeOfDay(hour: endHour, minute: endMin)));
+      current = TimeOfDay(hour: endHour, minute: endMin);
+    }
+    return slots;
+  }
+
+  Future<void> _submit() async {
+    if (_selectedService == null) {
+      SnackbarUtils.showError(context, 'Please select a service');
+      return;
+    }
+    final preview = _generateSlots();
+    if (preview.isEmpty) {
+      SnackbarUtils.showError(
+        context,
+        'No slots to create — check your time range',
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _resultMessage = null;
+    });
+
+    final provider = context.read<BookingProvider>();
+    final dateStr = DateFormat('yyyy-MM-dd').format(widget.selectedDate);
+    int created = 0, skipped = 0;
+
+    for (final (start, end) in preview) {
+      final ok = await provider.createSlot(
+        serviceId: _selectedService!.id,
+        date: dateStr,
+        startTime: _fmtTime(start),
+        endTime: _fmtTime(end),
+      );
+      if (ok)
+        created++;
+      else
+        skipped++;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+      _resultMessage =
+          '$created slot(s) created'
+          '${skipped > 0 ? ', $skipped skipped (already exist)' : ''}.';
+    });
+
+    widget.onCreated();
+    if (created > 0) SnackbarUtils.showSuccess(context, _resultMessage!);
+    if (created > 0) Navigator.pop(context);
+  }
+
+  Future<void> _pickTime({required bool isFrom}) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: isFrom ? _from : _to,
+    );
+    if (picked != null) setState(() => isFrom ? _from = picked : _to = picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final services = context.watch<ServiceProvider>().services;
+    final preview = _generateSlots();
     final dateLabel = DateFormat('EEE, MMM d yyyy').format(widget.selectedDate);
 
+    return _SheetWrapper(
+      title: 'Bulk Add Slots',
+      subtitle: dateLabel,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DropdownButtonFormField<ServiceModel>(
+            value: _selectedService,
+            hint: const Text('Select Service'),
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Service',
+            ),
+            items: services
+                .map((s) => DropdownMenuItem(value: s, child: Text(s.name)))
+                .toList(),
+            onChanged: (v) => setState(() => _selectedService = v),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _TimePicker(
+                  label: 'From',
+                  time: _from,
+                  onTap: () => _pickTime(isFrom: true),
+                  context: context,
+                ),
+              ),
+              Expanded(
+                child: _TimePicker(
+                  label: 'To',
+                  time: _to,
+                  onTap: () => _pickTime(isFrom: false),
+                  context: context,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          // Interval picker
+          const Text(
+            'Slot Duration / Interval',
+            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: _intervals.map((min) {
+              final selected = _interval == min;
+              return ChoiceChip(
+                label: Text('${min}min'),
+                selected: selected,
+                onSelected: (_) => setState(() => _interval = min),
+                selectedColor: AppColors.primary.withOpacity(0.15),
+                labelStyle: TextStyle(
+                  color: selected ? AppColors.primary : null,
+                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 14),
+          // Preview badge
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              preview.isEmpty
+                  ? 'No slots in range'
+                  : '${preview.length} slot(s) will be created  '
+                        '(${_from.format(context)} → ${_to.format(context)}, every ${_interval}min)',
+              style: TextStyle(
+                fontSize: 13,
+                color: preview.isEmpty ? AppColors.error : AppColors.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          _SubmitButton(
+            isLoading: _isLoading,
+            label: 'Create ${preview.length} Slot(s)',
+            onPressed: preview.isEmpty ? null : _submit,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Shared sheet helpers ──────────────────────────────────────
+
+class _SheetWrapper extends StatelessWidget {
+  final String title, subtitle;
+  final Widget child;
+  const _SheetWrapper({
+    required this.title,
+    required this.subtitle,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: Container(
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
         decoration: const BoxDecoration(
@@ -369,7 +689,8 @@ class _AddSlotSheetState extends State<_AddSlotSheet> {
           children: [
             Center(
               child: Container(
-                width: 40, height: 4,
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(2),
@@ -377,76 +698,78 @@ class _AddSlotSheetState extends State<_AddSlotSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text('Add Slot',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            Text(dateLabel, style: TextStyle(color: Colors.grey[600])),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Text(subtitle, style: TextStyle(color: Colors.grey[600])),
             const SizedBox(height: 20),
-
-            DropdownButtonFormField<ServiceModel>(
-              initialValue: _selectedService,
-              hint: const Text('Select Service'),
-              decoration: const InputDecoration(
-                  border: OutlineInputBorder(), labelText: 'Service'),
-              items: services
-                  .map((s) => DropdownMenuItem(value: s, child: Text(s.name)))
-                  .toList(),
-              onChanged: (v) => setState(() => _selectedService = v),
-            ),
-            const SizedBox(height: 14),
-
-            Row(
-              children: [
-                Expanded(
-                  child: ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Start Time', style: TextStyle(fontSize: 13)),
-                    subtitle: Text(
-                      _startTime.format(context),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    leading: const Icon(Icons.access_time, color: AppColors.primary),
-                    onTap: () => _pickTime(isStart: true),
-                  ),
-                ),
-                Expanded(
-                  child: ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('End Time', style: TextStyle(fontSize: 13)),
-                    subtitle: Text(
-                      _endTime.format(context),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    leading: const Icon(Icons.access_time_filled, color: AppColors.primary),
-                    onTap: () => _pickTime(isStart: false),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20, width: 20,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
-                    : const Text('Create Slot',
-                        style: TextStyle(color: Colors.white, fontSize: 16)),
-              ),
-            ),
+            child,
           ],
         ),
       ),
     );
   }
+}
+
+class _TimePicker extends StatelessWidget {
+  final String label;
+  final TimeOfDay time;
+  final VoidCallback onTap;
+  final BuildContext context;
+  const _TimePicker({
+    required this.label,
+    required this.time,
+    required this.onTap,
+    required this.context,
+  });
+
+  @override
+  Widget build(BuildContext _) => ListTile(
+    contentPadding: EdgeInsets.zero,
+    title: Text(label, style: const TextStyle(fontSize: 13)),
+    subtitle: Text(
+      time.format(context),
+      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+    ),
+    leading: const Icon(Icons.access_time, color: AppColors.primary),
+    onTap: onTap,
+  );
+}
+
+class _SubmitButton extends StatelessWidget {
+  final bool isLoading;
+  final String label;
+  final VoidCallback? onPressed;
+  const _SubmitButton({
+    required this.isLoading,
+    required this.label,
+    this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: double.infinity,
+    height: 50,
+    child: ElevatedButton(
+      onPressed: isLoading ? null : onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: isLoading
+          ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
+            )
+          : Text(
+              label,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+            ),
+    ),
+  );
 }

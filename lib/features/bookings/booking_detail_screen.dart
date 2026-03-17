@@ -1,6 +1,8 @@
 // lib/features/bookings/booking_detail_screen.dart
 // View booking details and cancel option
 
+// lib/features/bookings/booking_detail_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/booking_provider.dart';
@@ -9,40 +11,34 @@ import '../../data/models/booking_model.dart';
 
 class BookingDetailScreen extends StatelessWidget {
   final BookingModel booking;
-  
-  const BookingDetailScreen({
-    super.key,
-    required this.booking,
-  });
-  
+  const BookingDetailScreen({super.key, required this.booking});
+
   Future<void> _cancelBooking(BuildContext context) async {
-    // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (ctx) => AlertDialog(
         title: const Text('Cancel Booking'),
         content: const Text(
           'Are you sure you want to cancel this booking? This action cannot be undone.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.of(ctx).pop(false),
             child: const Text('No, Keep It'),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () => Navigator.of(ctx).pop(true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('Yes, Cancel'),
           ),
         ],
       ),
     );
-    
+
     if (confirmed == true && context.mounted) {
-      final success = await context.read<BookingProvider>().cancelBooking(booking.id);
-      
+      final success =
+          await context.read<BookingProvider>().cancelBooking(booking.id);
       if (!context.mounted) return;
-      
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -50,7 +46,7 @@ class BookingDetailScreen extends StatelessWidget {
             backgroundColor: AppColors.success,
           ),
         );
-        Navigator.of(context).pop(); // Go back to bookings list
+        Navigator.of(context).pop();
       } else {
         final error = context.read<BookingProvider>().error;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -62,13 +58,18 @@ class BookingDetailScreen extends StatelessWidget {
       }
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
+    // Use theme-aware colours everywhere
+    final _       = Theme.of(context).colorScheme;
+    final isDark   = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final labelColor = isDark ? Colors.white60 : AppColors.textSecondary;
+    final valueColor = isDark ? Colors.white : AppColors.textPrimary;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Booking Details'),
-      ),
+      appBar: AppBar(title: const Text('Booking Details')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -78,16 +79,11 @@ class BookingDetailScreen extends StatelessWidget {
             Center(
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
+                    horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
-                  color: booking.statusColor.withOpacity(0.1),
+                  color: booking.statusColor.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: booking.statusColor,
-                    width: 2,
-                  ),
+                  border: Border.all(color: booking.statusColor, width: 2),
                 ),
                 child: Text(
                   booking.statusText.toUpperCase(),
@@ -100,127 +96,135 @@ class BookingDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
-            // Booking ID
+
             _buildDetailRow(
+              context: context,
               icon: Icons.confirmation_number,
               label: 'Booking ID',
               value: '#${booking.id.toString().padLeft(6, '0')}',
+              cardColor: cardColor,
+              labelColor: labelColor,
+              valueColor: valueColor,
             ),
-            
             const Divider(height: 32),
-            
-            // Service
             _buildDetailRow(
+              context: context,
               icon: Icons.spa,
               label: 'Service',
               value: booking.serviceName,
+              cardColor: cardColor,
+              labelColor: labelColor,
+              valueColor: valueColor,
             ),
-            
             const Divider(height: 32),
-            
-            // Date
             _buildDetailRow(
+              context: context,
               icon: Icons.calendar_today,
               label: 'Date',
               value: booking.formattedDate,
+              cardColor: cardColor,
+              labelColor: labelColor,
+              valueColor: valueColor,
             ),
-            
             const Divider(height: 32),
-            
-            // Time
             _buildDetailRow(
+              context: context,
               icon: Icons.access_time,
               label: 'Time',
               value: booking.formattedTimeRange,
+              cardColor: cardColor,
+              labelColor: labelColor,
+              valueColor: valueColor,
             ),
-            
             const Divider(height: 32),
-            
-            // Price
             _buildDetailRow(
+              context: context,
               icon: Icons.payments,
               label: 'Price',
               value: booking.formattedPrice,
               isPrice: true,
+              cardColor: cardColor,
+              labelColor: labelColor,
+              valueColor: valueColor,
             ),
-            
             if (booking.notes != null) ...[
               const Divider(height: 32),
               _buildDetailRow(
+                context: context,
                 icon: Icons.note,
                 label: 'Notes',
                 value: booking.notes!,
+                cardColor: cardColor,
+                labelColor: labelColor,
+                valueColor: valueColor,
               ),
             ],
-            
             const Divider(height: 32),
-            
-            // Booked on
             _buildDetailRow(
+              context: context,
               icon: Icons.schedule,
               label: 'Booked On',
               value: booking.createdAt.toString().split('.')[0],
+              cardColor: cardColor,
+              labelColor: labelColor,
+              valueColor: valueColor,
             ),
-            
             if (booking.cancelledAt != null) ...[
               const Divider(height: 32),
               _buildDetailRow(
+                context: context,
                 icon: Icons.cancel,
                 label: 'Cancelled On',
                 value: booking.cancelledAt.toString().split('.')[0],
+                cardColor: cardColor,
+                labelColor: labelColor,
+                valueColor: valueColor,
               ),
             ],
           ],
         ),
       ),
-      
-      // Cancel button
       bottomNavigationBar: booking.canBeCancelled
           ? SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Consumer<BookingProvider>(
-                  builder: (context, provider, _) {
-                    return ElevatedButton(
-                      onPressed: provider.isLoading
-                          ? null
-                          : () => _cancelBooking(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.error,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: provider.isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Text(
-                              'Cancel Booking',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                    );
-                  },
+                  builder: (ctx, provider, _) => ElevatedButton(
+                    onPressed: provider.isLoading
+                        ? null
+                        : () => _cancelBooking(ctx),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.error,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: provider.isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2),
+                          )
+                        : const Text('Cancel Booking',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w600)),
+                  ),
                 ),
               ),
             )
           : null,
     );
   }
-  
+
   Widget _buildDetailRow({
+    required BuildContext context,
     required IconData icon,
     required String label,
     required String value,
+    required Color cardColor,
+    required Color labelColor,
+    required Color valueColor,
     bool isPrice = false,
   }) {
     return Row(
@@ -230,7 +234,7 @@ class BookingDetailScreen extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withOpacity(0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: AppColors.primary),
@@ -240,20 +244,16 @@ class BookingDetailScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
-              ),
+              Text(label,
+                  style: TextStyle(fontSize: 12, color: labelColor)),
               const SizedBox(height: 4),
               Text(
                 value,
                 style: TextStyle(
                   fontSize: 16,
-                  fontWeight: isPrice ? FontWeight.bold : FontWeight.w600,
-                  color: isPrice ? AppColors.primary : AppColors.textPrimary,
+                  fontWeight:
+                      isPrice ? FontWeight.bold : FontWeight.w600,
+                  color: isPrice ? AppColors.primary : valueColor,
                 ),
               ),
             ],

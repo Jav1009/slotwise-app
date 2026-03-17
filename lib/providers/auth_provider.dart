@@ -1,12 +1,15 @@
-// lib/providers/auth_provider.dart
-
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import '../data/models/user_model.dart';
 import '../data/services/auth_service.dart';
 import '../data/services/storage_service.dart';
+import '../data/services/api_service.dart';
+import '../data/services/fcm_service.dart';
+import '../core/constants/api_constants.dart';
 
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
+  final ApiService _apiService = ApiService();
 
   UserModel? _currentUser;
   bool _isLoading = false;
@@ -18,35 +21,46 @@ class AuthProvider with ChangeNotifier {
   bool get isLoggedIn => _currentUser != null;
   bool get isAdmin => _currentUser?.isAdmin ?? false;
 
-  Future<void> initializeAuth() async {
-    // ✅ Defer the first notifyListeners() until after build is complete
-    await Future.microtask(() => _setLoading(true));
+  // ── Safe notify — defers if called during a build frame ────
 
+  void _notify() {
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+  }
+
+  // ── Initialise on app launch ───────────────────────────────
+
+  Future<void> initializeAuth() async {
+    _isLoading = true;
+    _notify();
     try {
       final loggedIn = await _authService.isLoggedIn();
       if (loggedIn) {
         _currentUser = await _authService.getCurrentUser();
         _error = null;
+        _registerFcmToken();
       }
     } catch (e) {
       _error = e.toString();
       await StorageService.clearAll();
       _currentUser = null;
     } finally {
-      _setLoading(false);
+      _isLoading = false;
+      _notify();
     }
   }
+
+  // ── Register ───────────────────────────────────────────────
 
   Future<bool> register({
     required String name,
     required String email,
     required String password,
   }) async {
-    await Future.microtask(() {
-      _isLoading = true;  // ✅ Set state directly before the microtask notifies
-      _error = null;
-      notifyListeners();
-    });
+    _isLoading = true;
+    _error = null;
+    _notify();
 
     try {
       _currentUser = await _authService.register(
@@ -54,42 +68,42 @@ class AuthProvider with ChangeNotifier {
         email: email,
         password: password,
       );
-      _setLoading(false);
+      _registerFcmToken();
       return true;
     } catch (e) {
       _error = e.toString();
-      _setLoading(false);
       return false;
+    } finally {
+      _isLoading = false;
+      _notify();
     }
   }
 
-  Future<bool> login({
-    required String email,
-    required String password,
-  }) async {
-    await Future.microtask(() {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
-    });
+  // ── Login ──────────────────────────────────────────────────
+
+  Future<bool> login({required String email, required String password}) async {
+    _isLoading = true;
+    _error = null;
+    _notify();
 
     try {
-      _currentUser = await _authService.login(
-        email: email,
-        password: password,
-      );
-      _setLoading(false);
+      _currentUser = await _authService.login(email: email, password: password);
+      _registerFcmToken();
       return true;
     } catch (e) {
       _error = e.toString();
-      _setLoading(false);
       return false;
+    } finally {
+      _isLoading = false;
+      _notify();
     }
   }
 
-  Future<void> logout() async {
-    await Future.microtask(() => _setLoading(true));
+  // ── Logout ─────────────────────────────────────────────────
 
+  Future<void> logout() async {
+    _isLoading = true;
+    _notify();
     try {
       await _authService.logout();
       _currentUser = null;
@@ -97,27 +111,67 @@ class AuthProvider with ChangeNotifier {
     } catch (e) {
       _error = e.toString();
     } finally {
-      _setLoading(false);
+      _isLoading = false;
+      _notify();
     }
   }
+
+  // ── Update profile ─────────────────────────────────────────
+
+  Future<bool> updateProfile({
+    String? name,
+    String? phone,
+    String? avatarUrl,
+  }) async {
+    try {
+      final body = <String, dynamic>{};
+      if (name != null) body['name'] = name;
+      if (phone != null) body['phone'] = phone;
+      if (avatarUrl != null) body['avatar_url'] = avatarUrl;
+
+      final res = await _apiService.put(ApiConstants.updateProfile, data: body);
+      _currentUser = UserModel.fromJson(res.data['data']['user']);
+      _notify();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _notify();
+      return false;
+    }
+  }
+
+  // ── Refresh current user from backend ─────────────────────
 
   Future<void> refreshUser() async {
     try {
       _currentUser = await _authService.getCurrentUser();
-      notifyListeners();
+      _notify();
     } catch (e) {
       _error = e.toString();
-      notifyListeners();
+      _notify();
     }
   }
 
-  void clearError() {
-    _error = null;
-    notifyListeners();
+  // ── FCM token registration ─────────────────────────────────
+
+  void _registerFcmToken() {
+    FCMService().saveTokenToBackend((token) async {
+      try {
+        await _apiService.post(
+          ApiConstants.saveFcmToken,
+          data: {'token': token},
+        );
+        debugPrint('FCM token saved to backend');
+      } catch (e) {
+        debugPrint('FCM token save failed: $e');
+      }
+    });
   }
 
-  void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
+  // ── Helpers ────────────────────────────────────────────────
+
+  void clearError() {
+    _error = null;
+    _notify();
   }
 }
