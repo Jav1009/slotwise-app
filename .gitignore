@@ -118,3 +118,5 @@ docs/api/
 # ============================================
 .cache/
 .parcel-cache/
+
+backend.zip
