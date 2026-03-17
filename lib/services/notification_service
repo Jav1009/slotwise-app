@@ -1,0 +1,424 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_native_timezone/flutter_native_timezone.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import '../core/constants/app_constants.dart';
+import '../core/constants/routes.dart';
+
+class NotificationService {
+  static final NotificationService _instance = NotificationService._internal();
+  factory NotificationService() => _instance;
+  NotificationService._internal();
+
+  final FlutterLocalNotificationsPlugin _localNotifications = 
+      FlutterLocalNotificationsPlugin();
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  
+  bool _isInitialized = false;
+  String? _currentFCMToken;
+  
+  // Stream for handling notification taps
+  final _notificationTapController = StreamController<ReceivedNotification>.broadcast();
+  Stream<ReceivedNotification> get onNotificationTap => _notificationTapController.stream;
+
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+
+    try {
+      // Initialize timezone
+      tz.initializeTimeZones();
+      final String timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
+
+      // Initialize Android settings
+      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      
+      // Initialize iOS settings
+      const iosSettings = DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      );
+
+      // Initialize settings
+      const initSettings = InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      );
+
+      // Initialize plugin
+      await _localNotifications.initialize(
+        initSettings,
+        onDidReceiveNotificationResponse: (details) {
+          _onNotificationTap(details);
+        },
+      );
+
+      // Request permissions
+      await _requestPermissions();
+
+      // Setup Firebase Cloud Messaging
+      await _setupFirebaseMessaging();
+
+      // Create notification channels
+      await _createNotificationChannels();
+
+      _isInitialized = true;
+      debugPrint('✅ Notification service initialized');
+    } catch (e) {
+      debugPrint('❌ Error initializing notifications: $e');
+    }
+  }
+
+  Future<void> _requestPermissions() async {
+    // Android permissions are handled in manifest
+    // iOS permissions
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+
+    // Request FCM permissions
+    NotificationSettings settings = await _firebaseMessaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+      provisional: false,
+    );
+
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      debugPrint('✅ FCM permission granted');
+    }
+  }
+
+  Future<void> _setupFirebaseMessaging() async {
+    try {
+      // Get FCM token
+      _currentFCMToken = await _firebaseMessaging.getToken();
+      debugPrint('📱 FCM Token: $_currentFCMToken');
+
+      // Listen to token refresh
+      _firebaseMessaging.onTokenRefresh.listen((token) {
+        _currentFCMToken = token;
+        debugPrint('🔄 FCM Token refreshed: $token');
+        // Send token to backend
+        _sendTokenToBackend(token);
+      });
+
+      // Handle foreground messages
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        debugPrint('📩 Received foreground message: ${message.messageId}');
+        _showForegroundNotification(message);
+      });
+
+      // Handle background messages (app in background)
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+      // Handle initial message (app opened from terminated state)
+      final RemoteMessage? initialMessage = await _firebaseMessaging.getInitialMessage();
+      if (initialMessage != null) {
+        _handleNotificationTap(initialMessage);
+      }
+
+      // Handle when app is opened from background
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        _handleNotificationTap(message);
+      });
+
+    } catch (e) {
+      debugPrint('❌ Error setting up FCM: $e');
+    }
+  }
+
+  static Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+    debugPrint('📩 Background message: ${message.messageId}');
+    // Handle background message
+    final notificationService = NotificationService();
+    await notificationService._showBackgroundNotification(message);
+  }
+
+  Future<void> _createNotificationChannels() async {
+    // Booking channel
+    const androidChannel = AndroidNotificationChannel(
+      'bookings_channel',
+      'Booking Notifications',
+      description: 'Notifications about your bookings',
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+      enableLights: true,
+      ledColor: Colors.blue,
+    );
+
+    // Reminder channel
+    const reminderChannel = AndroidNotificationChannel(
+      'reminders_channel',
+      'Reminders',
+      description: 'Booking reminders',
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    // Admin channel
+    const adminChannel = AndroidNotificationChannel(
+      'admin_channel',
+      'Admin Notifications',
+      description: 'Notifications for admins',
+      importance: Importance.high,
+      playSound: true,
+    );
+
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(androidChannel);
+
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(reminderChannel);
+
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(adminChannel);
+  }
+
+  Future<void> _showForegroundNotification(RemoteMessage message) async {
+    final notification = message.notification;
+    if (notification == null) return;
+
+    final data = message.data;
+    
+    await _localNotifications.show(
+      notification.hashCode,
+      notification.title,
+      notification.body,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          _getChannelId(data['type']),
+          _getChannelName(data['type']),
+          channelDescription: _getChannelDescription(data['type']),
+          importance: Importance.high,
+          priority: Priority.high,
+          showWhen: true,
+          icon: '@mipmap/ic_launcher',
+          payload: jsonEncode(data),
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      ),
+      payload: jsonEncode(data),
+    );
+  }
+
+  Future<void> _showBackgroundNotification(RemoteMessage message) async {
+    final notification = message.notification;
+    if (notification == null) return;
+
+    final data = message.data;
+
+    await _localNotifications.show(
+      notification.hashCode,
+      notification.title,
+      notification.body,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          _getChannelId(data['type']),
+          _getChannelName(data['type']),
+          channelDescription: _getChannelDescription(data['type']),
+          importance: Importance.high,
+          priority: Priority.high,
+          payload: jsonEncode(data),
+        ),
+        iOS: const DarwinNotificationDetails(),
+      ),
+      payload: jsonEncode(data),
+    );
+  }
+
+  String _getChannelId(String? type) {
+    switch (type) {
+      case 'booking_confirmed':
+      case 'booking_cancelled':
+        return 'bookings_channel';
+      case 'reminder':
+        return 'reminders_channel';
+      case 'new_booking':
+        return 'admin_channel';
+      default:
+        return 'bookings_channel';
+    }
+  }
+
+  String _getChannelName(String? type) {
+    switch (type) {
+      case 'booking_confirmed':
+      case 'booking_cancelled':
+        return 'Booking Notifications';
+      case 'reminder':
+        return 'Reminders';
+      case 'new_booking':
+        return 'Admin Notifications';
+      default:
+        return 'Notifications';
+    }
+  }
+
+  String _getChannelDescription(String? type) {
+    switch (type) {
+      case 'booking_confirmed':
+      case 'booking_cancelled':
+        return 'Updates about your bookings';
+      case 'reminder':
+        return 'Booking reminders';
+      case 'new_booking':
+        return 'New booking alerts for admins';
+      default:
+        return 'App notifications';
+    }
+  }
+
+  void _onNotificationTap(NotificationResponse details) {
+    if (details.payload != null) {
+      try {
+        final data = jsonDecode(details.payload!);
+        _notificationTapController.add(ReceivedNotification.fromJson(data));
+      } catch (e) {
+        debugPrint('Error parsing notification payload: $e');
+      }
+    }
+  }
+
+  void _handleNotificationTap(RemoteMessage message) {
+    final data = message.data;
+    _notificationTapController.add(ReceivedNotification.fromJson(data));
+  }
+
+  Future<void> showLocalNotification({
+    required int id,
+    required String title,
+    required String body,
+    String? type,
+    Map<String, dynamic>? data,
+    DateTime? scheduledDate,
+  }) async {
+    final notificationDetails = NotificationDetails(
+      android: AndroidNotificationDetails(
+        _getChannelId(type),
+        _getChannelName(type),
+        channelDescription: _getChannelDescription(type),
+        importance: Importance.high,
+        priority: Priority.high,
+        showWhen: true,
+        icon: '@mipmap/ic_launcher',
+        payload: data != null ? jsonEncode(data) : null,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
+    );
+
+    if (scheduledDate != null) {
+      // Schedule notification
+      await _localNotifications.zonedSchedule(
+        id,
+        title,
+        body,
+        tz.TZDateTime.from(scheduledDate, tz.local),
+        notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    } else {
+      // Show immediately
+      await _localNotifications.show(
+        id,
+        title,
+        body,
+        notificationDetails,
+        payload: data != null ? jsonEncode(data) : null,
+      );
+    }
+  }
+
+  Future<void> scheduleReminder({
+    required int bookingId,
+    required String serviceName,
+    required DateTime appointmentTime,
+  }) async {
+    // Schedule reminder 1 hour before appointment
+    final reminderTime = appointmentTime.subtract(const Duration(hours: 1));
+    
+    if (reminderTime.isAfter(DateTime.now())) {
+      await showLocalNotification(
+        id: bookingId,
+        title: 'Upcoming Appointment Reminder',
+        body: 'Your $serviceName appointment is in 1 hour',
+        type: 'reminder',
+        data: {
+          'type': 'reminder',
+          'booking_id': bookingId,
+          'action': 'open_booking',
+        },
+        scheduledDate: reminderTime,
+      );
+    }
+  }
+
+  Future<void> cancelNotification(int id) async {
+    await _localNotifications.cancel(id);
+  }
+
+  Future<void> cancelAllNotifications() async {
+    await _localNotifications.cancelAll();
+  }
+
+  Future<String?> getFCMToken() async {
+    return _currentFCMToken ?? await _firebaseMessaging.getToken();
+  }
+
+  Future<void> _sendTokenToBackend(String token) async {
+    // TODO: Send token to your backend API
+    // This will allow your backend to send push notifications to this device
+  }
+
+  void dispose() {
+    _notificationTapController.close();
+  }
+}
+
+class ReceivedNotification {
+  final String type;
+  final int? bookingId;
+  final String? action;
+  final Map<String, dynamic> data;
+
+  ReceivedNotification({
+    required this.type,
+    this.bookingId,
+    this.action,
+    required this.data,
+  });
+
+  factory ReceivedNotification.fromJson(Map<String, dynamic> json) {
+    return ReceivedNotification(
+      type: json['type'] as String? ?? 'unknown',
+      bookingId: json['booking_id'] as int?,
+      action: json['action'] as String?,
+      data: json,
+    );
+  }
+}
