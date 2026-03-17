@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../data/models/booking.dart';
 import '../data/models/slot.dart';
 import '../data/repositories/booking_repository.dart';
+import '../services/notification_service.dart';
+import '../core/constants/app_constants.dart';
 
 class BookingProvider extends ChangeNotifier {
   List<Booking> _myBookings = [];
@@ -16,6 +18,7 @@ class BookingProvider extends ChangeNotifier {
   Map<String, dynamic>? _dashboardStats;
   List<Map<String, dynamic>> _analytics = [];
 
+  // Getters
   List<Booking> get myBookings => _myBookings;
   List<Booking> get upcomingBookings => _upcomingBookings;
   Booking? get selectedBooking => _selectedBooking;
@@ -51,6 +54,8 @@ class BookingProvider extends ChangeNotifier {
   
   List<Booking> get allCancelledBookings => 
       _allBookings.where((b) => b.isCancelled).toList();
+
+  // ============= USER METHODS =============
 
   Future<void> fetchMyBookings() async {
     _isLoading = true;
@@ -115,7 +120,8 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> createBooking({
+  /// Enhanced booking creation with push notifications
+  Future<bool> createBookingWithNotifications({
     required int serviceId,
     required Slot slot,
     String? notes,
@@ -137,6 +143,10 @@ class BookingProvider extends ChangeNotifier {
         if (booking.isUpcoming) {
           _upcomingBookings.add(booking);
         }
+        
+        // Send push notifications
+        await _sendBookingNotifications(booking);
+        
         notifyListeners();
         return true;
       } else {
@@ -152,6 +162,56 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
+  /// Legacy method for backward compatibility
+  Future<bool> createBooking({
+    required int serviceId,
+    required Slot slot,
+    String? notes,
+  }) {
+    return createBookingWithNotifications(
+      serviceId: serviceId,
+      slot: slot,
+      notes: notes,
+    );
+  }
+
+  /// Send all notifications for a new booking
+  Future<void> _sendBookingNotifications(Booking booking) async {
+    try {
+      final notificationService = NotificationService();
+      
+      // 1. Show local confirmation notification
+      await notificationService.showLocalNotification(
+        id: booking.id,
+        title: '✅ Booking Confirmed!',
+        body: 'Your appointment for ${booking.serviceName} on ${booking.displayDateTime} has been confirmed.',
+        type: 'booking_confirmed',
+        data: {
+          'type': 'booking_confirmed',
+          'booking_id': booking.id,
+          'action': 'open_booking',
+          'service': booking.serviceName,
+          'date': booking.displayDate,
+          'time': booking.displayTime,
+        },
+      );
+
+      // 2. Schedule reminder 1 hour before appointment
+      await notificationService.scheduleReminder(
+        bookingId: booking.id,
+        serviceName: booking.serviceName,
+        appointmentTime: booking.dateTime,
+      );
+
+      // 3. Notify admins (this would be sent from backend)
+      // await _notifyAdmins(booking);
+      
+      debugPrint('✅ All notifications sent for booking ${booking.id}');
+    } catch (e) {
+      debugPrint('❌ Error sending notifications: $e');
+    }
+  }
+
   Future<bool> cancelBooking(int bookingId) async {
     _isLoading = true;
     _error = null;
@@ -161,6 +221,9 @@ class BookingProvider extends ChangeNotifier {
       final response = await BookingRepository.cancelBooking(bookingId);
       
       if (response.success) {
+        // Get the booking before updating
+        final cancelledBooking = _myBookings.firstWhere((b) => b.id == bookingId);
+        
         // Update in myBookings
         final index = _myBookings.indexWhere((b) => b.id == bookingId);
         if (index != -1) {
@@ -176,6 +239,9 @@ class BookingProvider extends ChangeNotifier {
           _selectedBooking = _selectedBooking?.copyWith(status: 'cancelled');
         }
         
+        // Send cancellation notification
+        await _sendCancellationNotification(cancelledBooking);
+        
         notifyListeners();
         return true;
       } else {
@@ -191,6 +257,24 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> _sendCancellationNotification(Booking booking) async {
+    try {
+      await NotificationService().showLocalNotification(
+        id: booking.id + 5000, // Different ID to avoid conflict
+        title: '❌ Booking Cancelled',
+        body: 'Your appointment for ${booking.serviceName} on ${booking.displayDateTime} has been cancelled.',
+        type: 'booking_cancelled',
+        data: {
+          'type': 'booking_cancelled',
+          'booking_id': booking.id,
+          'action': 'open_booking',
+        },
+      );
+    } catch (e) {
+      debugPrint('Error sending cancellation notification: $e');
+    }
+  }
+
   Future<void> fetchBookingStats() async {
     try {
       final response = await BookingRepository.getBookingStats();
@@ -203,7 +287,8 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
-  // Admin methods
+  // ============= ADMIN METHODS =============
+
   Future<void> fetchAllBookings({
     String? status,
     String? date,
@@ -242,27 +327,32 @@ class BookingProvider extends ChangeNotifier {
       final response = await BookingRepository.updateBookingStatus(bookingId, status);
       
       if (response.success) {
+        final updatedBooking = response.data!;
+        
         // Update in allBookings
         final index = _allBookings.indexWhere((b) => b.id == bookingId);
         if (index != -1) {
-          _allBookings[index] = response.data!;
+          _allBookings[index] = updatedBooking;
         }
         
         // Also update in myBookings if it exists there
         final myIndex = _myBookings.indexWhere((b) => b.id == bookingId);
         if (myIndex != -1) {
-          _myBookings[myIndex] = response.data!;
+          _myBookings[myIndex] = updatedBooking;
         }
         
         // Update upcoming if needed
-        if (response.data!.isUpcoming) {
+        if (updatedBooking.isUpcoming) {
           final upcomingIndex = _upcomingBookings.indexWhere((b) => b.id == bookingId);
           if (upcomingIndex != -1) {
-            _upcomingBookings[upcomingIndex] = response.data!;
+            _upcomingBookings[upcomingIndex] = updatedBooking;
           }
         } else {
           _upcomingBookings.removeWhere((b) => b.id == bookingId);
         }
+        
+        // Send status update notification
+        await _sendStatusUpdateNotification(updatedBooking, status);
         
         notifyListeners();
         return true;
@@ -276,6 +366,43 @@ class BookingProvider extends ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> _sendStatusUpdateNotification(Booking booking, String newStatus) async {
+    String title, body;
+    
+    switch (newStatus) {
+      case 'confirmed':
+        title = '✅ Booking Confirmed';
+        body = 'Your booking for ${booking.serviceName} has been confirmed!';
+        break;
+      case 'completed':
+        title = '🎉 Service Completed';
+        body = 'Thank you for using ${booking.serviceName}. We hope to see you again!';
+        break;
+      case 'cancelled':
+        title = '❌ Booking Cancelled';
+        body = 'Your booking for ${booking.serviceName} has been cancelled.';
+        break;
+      default:
+        return;
+    }
+
+    try {
+      await NotificationService().showLocalNotification(
+        id: booking.id + 2000,
+        title: title,
+        body: body,
+        type: 'booking_$newStatus',
+        data: {
+          'type': 'booking_$newStatus',
+          'booking_id': booking.id,
+          'action': 'open_booking',
+        },
+      );
+    } catch (e) {
+      debugPrint('Error sending status notification: $e');
     }
   }
 
@@ -306,13 +433,50 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
+  // ============= UTILITY METHODS =============
+
+  /// Get upcoming bookings count
+  int getUpcomingCount() {
+    return _myBookings.where((b) => b.isUpcoming).length;
+  }
+
+  /// Get past bookings count
+  int getPastCount() {
+    return _myBookings.where((b) => !b.isUpcoming).length;
+  }
+
+  /// Check if user has any active bookings
+  bool hasActiveBookings() {
+    return _myBookings.any((b) => b.isUpcoming && !b.isCancelled);
+  }
+
+  /// Get booking by ID
+  Booking? getBookingById(int id) {
+    try {
+      return _myBookings.firstWhere((b) => b.id == id);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Clear selected booking
   void clearSelectedBooking() {
     _selectedBooking = null;
     notifyListeners();
   }
 
+  /// Clear error
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  /// Refresh all data
+  Future<void> refreshAllData() async {
+    await Future.wait([
+      fetchMyBookings(),
+      fetchUpcomingBookings(),
+      fetchBookingStats(),
+    ]);
   }
 }
