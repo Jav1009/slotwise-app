@@ -11,7 +11,7 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
-    final response = await ApiService.post('/auth/login', {
+    final response = await ApiService.post(AppConstants.authLogin, {
       'email': email,
       'password': password,
     });
@@ -46,7 +46,7 @@ class AuthRepository {
     required String password,
     String? phone,
   }) async {
-    final response = await ApiService.post('/auth/register', {
+    final response = await ApiService.post(AppConstants.authRegister, {
       'name': name,
       'email': email,
       'password': password,
@@ -78,7 +78,7 @@ class AuthRepository {
   }
 
   static Future<ApiResponse<Map<String, dynamic>>> getProfile() async {
-    return await ApiService.get('/auth/me');
+    return await ApiService.get(AppConstants.authMe);
   }
 
   static Future<ApiResponse<Map<String, dynamic>>> updateProfile({
@@ -86,7 +86,7 @@ class AuthRepository {
     String? phone,
     String? avatarUrl,
   }) async {
-    final response = await ApiService.put('/auth/me', {
+    final response = await ApiService.put(AppConstants.authMe, {
       'name': name,
       'phone': phone,
       'avatar_url': avatarUrl,
@@ -123,6 +123,7 @@ class AuthRepository {
         final Map<String, dynamic> userMap = jsonDecode(userData);
         return User.fromJson(userMap);
       } catch (e) {
+        debugPrint('Error parsing stored user: $e');
         return null;
       }
     }
@@ -131,7 +132,7 @@ class AuthRepository {
 
   static Future<bool> isLoggedIn() async {
     final token = await getToken();
-    return token != null;
+    return token != null && token.isNotEmpty;
   }
 
   static Future<String?> getUserId() async {
@@ -144,6 +145,6 @@ class AuthRepository {
 
   static Future<bool> isAdmin() async {
     final role = await getUserRole();
-    return role == 'admin';
+    return role == AppConstants.roleAdmin;
   }
 }
