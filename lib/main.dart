@@ -9,6 +9,8 @@ import 'providers/slot_provider.dart';
 import 'providers/booking_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/theme_provider.dart';
+import 'services/notification_service.dart';
+import 'widgets/notification_handler.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
@@ -31,13 +33,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   try {
-    // Initialize Firebase
     await Firebase.initializeApp();
   } catch (e) {
     debugPrint('Firebase initialization error: $e');
   }
   
-  // Initialize network client
   DioClient().initialize();
   
   runApp(const MyApp());
@@ -96,6 +96,11 @@ class MyApp extends StatelessWidget {
               '/admin/slots': (context) => const ManageSlotsScreen(),
               '/admin/bookings': (context) => const ManageBookingsScreen(),
               '/admin/analytics': (context) => const AnalyticsScreen(),
+            },
+            builder: (context, child) {
+              return NotificationHandler(
+                child: child!,
+              );
             },
           );
         },
