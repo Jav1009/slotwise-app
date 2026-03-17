@@ -8,15 +8,21 @@ class AppTheme {
   static const Color warningColor = Color(0xFFF39C12);
   static const Color successColor = Color(0xFF2ECC71);
   static const Color infoColor = Color(0xFF3498DB);
+  static const Color backgroundColor = Color(0xFFF5F5F5);
+  static const Color surfaceColor = Colors.white;
+  static const Color darkBackgroundColor = Color(0xFF121212);
+  static const Color darkSurfaceColor = Color(0xFF1E1E1E);
   
   static ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
     primaryColor: primaryColor,
+    scaffoldBackgroundColor: backgroundColor,
     colorScheme: const ColorScheme.light(
       primary: primaryColor,
       secondary: secondaryColor,
       error: errorColor,
-      surface: Colors.white,
+      surface: surfaceColor,
+      background: backgroundColor,
     ),
     appBarTheme: const AppBarTheme(
       elevation: 0,
@@ -61,7 +67,22 @@ class AppTheme {
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey[300]!),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: primaryColor, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: errorColor),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: errorColor, width: 2),
       ),
       filled: true,
       fillColor: Colors.grey[50],
@@ -69,26 +90,22 @@ class AppTheme {
       labelStyle: TextStyle(color: Colors.grey[600]),
       hintStyle: TextStyle(color: Colors.grey[400]),
       errorStyle: const TextStyle(color: errorColor),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: primaryColor, width: 1.5),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey[300]!),
-      ),
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(  // Fixed: CardThemeData instead of CardTheme
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
       clipBehavior: Clip.antiAlias,
+      color: surfaceColor,
+      margin: EdgeInsets.zero,
     ),
     chipTheme: ChipThemeData(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.grey[100]!,
       selectedColor: primaryColor,
+      disabledColor: Colors.grey[300]!,
       labelStyle: const TextStyle(fontSize: 12),
+      secondaryLabelStyle: const TextStyle(fontSize: 12),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
@@ -99,6 +116,7 @@ class AppTheme {
       unselectedItemColor: Colors.grey[400],
       type: BottomNavigationBarType.fixed,
       elevation: 8,
+      backgroundColor: surfaceColor,
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: primaryColor,
@@ -117,17 +135,35 @@ class AppTheme {
         color: Colors.black87,
       ),
       contentTextStyle: const TextStyle(fontSize: 16, color: Colors.black54),
+      backgroundColor: surfaceColor,
+    ),
+    dividerColor: Colors.grey[300],
+    dividerTheme: DividerThemeData(
+      color: Colors.grey[300],
+      thickness: 1,
+      space: 1,
+    ),
+    progressIndicatorTheme: ProgressIndicatorThemeData(
+      color: primaryColor,
+      linearTrackColor: Colors.grey[300],
+    ),
+    tabBarTheme: TabBarTheme(
+      labelColor: primaryColor,
+      unselectedLabelColor: Colors.grey[600],
+      indicatorColor: primaryColor,
     ),
   );
 
   static ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
     primaryColor: primaryColor,
+    scaffoldBackgroundColor: darkBackgroundColor,
     colorScheme: const ColorScheme.dark(
       primary: primaryColor,
       secondary: secondaryColor,
       error: errorColor,
-      surface: Color(0xFF1E1E1E),
+      surface: darkSurfaceColor,
+      background: darkBackgroundColor,
     ),
     appBarTheme: AppBarTheme(
       elevation: 0,
@@ -163,7 +199,22 @@ class AppTheme {
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey[700]!),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: primaryColor, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: errorColor),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: errorColor, width: 2),
       ),
       filled: true,
       fillColor: Colors.grey[800],
@@ -171,21 +222,15 @@ class AppTheme {
       labelStyle: TextStyle(color: Colors.grey[400]),
       hintStyle: TextStyle(color: Colors.grey[500]),
       errorStyle: const TextStyle(color: errorColor),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: primaryColor, width: 1.5),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey[700]!),
-      ),
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(  // Fixed: CardThemeData instead of CardTheme
       elevation: 2,
-      color: Colors.grey[850],
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
+      clipBehavior: Clip.antiAlias,
+      color: darkSurfaceColor,
+      margin: EdgeInsets.zero,
     ),
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
       selectedItemColor: primaryColor,
@@ -194,8 +239,15 @@ class AppTheme {
       type: BottomNavigationBarType.fixed,
       elevation: 8,
     ),
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      backgroundColor: primaryColor,
+      foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+    ),
     dialogTheme: DialogTheme(
-      backgroundColor: Colors.grey[850],
+      backgroundColor: darkSurfaceColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -206,13 +258,20 @@ class AppTheme {
       ),
       contentTextStyle: const TextStyle(fontSize: 16, color: Colors.white70),
     ),
+    dividerColor: Colors.grey[800],
+    dividerTheme: DividerThemeData(
+      color: Colors.grey[800],
+      thickness: 1,
+      space: 1,
+    ),
+    progressIndicatorTheme: ProgressIndicatorThemeData(
+      color: primaryColor,
+      linearTrackColor: Colors.grey[700],
+    ),
+    tabBarTheme: TabBarTheme(
+      labelColor: primaryColor,
+      unselectedLabelColor: Colors.grey[400],
+      indicatorColor: primaryColor,
+    ),
   );
-}
-
-// Extension for easier theme access
-extension ThemeExtension on BuildContext {
-  bool get isDarkMode => Theme.of(this).brightness == Brightness.dark;
-  Color get primaryColor => Theme.of(this).primaryColor;
-  Color get scaffoldBackgroundColor => Theme.of(this).scaffoldBackgroundColor;
-  Color get cardColor => Theme.of(this).cardTheme.color ?? Colors.white;
 }
