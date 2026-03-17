@@ -1,0 +1,83 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/notification_service.dart';
+import '../providers/auth_provider.dart';
+import '../providers/booking_provider.dart';
+import '../core/constants/routes.dart';
+
+class NotificationHandler extends StatefulWidget {
+  final Widget child;
+
+  const NotificationHandler({
+    Key? key,
+    required this.child,
+  }) : super(key: key);
+
+  @override
+  State<NotificationHandler> createState() => _NotificationHandlerState();
+}
+
+class _NotificationHandlerState extends State<NotificationHandler> {
+  final NotificationService _notificationService = NotificationService();
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeNotifications();
+    _setupNotificationListener();
+  }
+
+  Future<void> _initializeNotifications() async {
+    await _notificationService.initialize();
+  }
+
+  void _setupNotificationListener() {
+    _notificationService.onNotificationTap.listen((notification) {
+      _handleNotificationTap(notification);
+    });
+  }
+
+  void _handleNotificationTap(ReceivedNotification notification) {
+    if (!mounted) return;
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    
+    if (!authProvider.isAuthenticated) {
+      Navigator.of(context).pushNamed(AppRoutes.login);
+      return;
+    }
+
+    switch (notification.action) {
+      case 'open_booking':
+        if (notification.bookingId != null) {
+          Navigator.of(context).pushNamed(
+            AppRoutes.bookingDetail,
+            arguments: notification.bookingId,
+          );
+        }
+        break;
+      case 'open_admin':
+        if (authProvider.isAdmin) {
+          Navigator.of(context).pushNamed(AppRoutes.adminDashboard);
+        }
+        break;
+      case 'open_bookings':
+        Navigator.of(context).pushNamed(AppRoutes.myBookings);
+        break;
+      default:
+        // Just open the app
+        break;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
+  }
+
+  @override
+  void dispose() {
+    _notificationService.dispose();
+    super.dispose();
+  }
+}
