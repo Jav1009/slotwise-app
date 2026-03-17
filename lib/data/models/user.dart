@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class User {
   final int id;
   final String name;
@@ -8,7 +10,7 @@ class User {
   final DateTime? createdAt;
   final int unreadNotifications;
 
-  User({
+  const User({
     required this.id,
     required this.name,
     required this.email,
@@ -28,7 +30,7 @@ class User {
       phone: json['phone'] as String?,
       avatarUrl: json['avatar_url'] as String?,
       createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
+          ? DateTime.parse(json['created_at'] as String) 
           : null,
       unreadNotifications: json['unread_notifications'] as int? ?? 0,
     );
@@ -49,6 +51,7 @@ class User {
   String get initials {
     if (name.isEmpty) return 'U';
     final parts = name.trim().split(' ');
+    if (parts.isEmpty) return 'U';
     if (parts.length == 1) {
       return parts[0][0].toUpperCase();
     }
