@@ -10,7 +10,7 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme   = Theme.of(context);
+    Theme.of(context);
     final isDark  = context.watch<ThemeProvider>().isDarkMode;
 
     return Scaffold(

@@ -2,40 +2,76 @@
 // Admin home screen. Displays live stats cards, quick-action
 // navigation buttons, and a popular services leaderboard.
 
+// Always fetches all-time stats (no date range).
+// Re-fetches when navigated back to from analytics or any child screen.
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:slotwise/features/admin/bulk_slots_screen.dart';
+import 'package:slotwise/features/admin/analytics_screen.dart';
 import 'package:slotwise/widgets/admin_theme_wrapper.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../core/utils/snackbar_utils.dart';
 import '../auth/login_screen.dart';
 import 'manage_services_screen.dart';
 import 'manage_slots_screen.dart';
 import 'manage_bookings_screen.dart';
+import '../../main.dart'; // for routeObserver
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
   @override
-  State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+  State<AdminDashboardScreen> createState() =>
+      _AdminDashboardScreenState();
 }
 
-class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+class _AdminDashboardScreenState extends State<AdminDashboardScreen>
+    with RouteAware {
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
-      if (mounted) context.read<AdminProvider>().fetchStats();
+      if (mounted) _fetchAllTime();
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Subscribe so didPopNext fires when returning from a child route
+    final route = ModalRoute.of(context);
+    if (route != null) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  /// Called when a child route is popped and this screen is visible again.
+  /// Re-fetches all-time stats so the dashboard is never left showing
+  /// whatever date range the analytics screen last requested.
+  @override
+  void didPopNext() {
+    _fetchAllTime();
+  }
+
+  /// Always fetches with NO date range = all-time totals.
+  void _fetchAllTime() {
+    context.read<AdminProvider>().fetchStats();
+  }
+
   Future<void> _handleLogout() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAdminDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Log Out'),
         content: const Text('Are you sure you want to log out?'),
         actions: [
@@ -45,7 +81,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            style:
+                TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('Log Out'),
           ),
         ],
@@ -60,22 +97,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Future<void> _refresh() async {
-    await context.read<AdminProvider>().fetchStats();
-  }
-
   @override
   Widget build(BuildContext context) {
     final admin = context.watch<AdminProvider>();
-    final auth = context.watch<AuthProvider>();
-    final name = auth.currentUser?.name.split(' ').first ?? 'Admin';
+    final auth  = context.watch<AuthProvider>();
+    final name  = auth.currentUser?.name.split(' ').first ?? 'Admin';
 
     return SafeArea(
       child: AdminThemeWrapper(
         child: Scaffold(
           backgroundColor: const Color(0xFFF5F7FA),
           body: RefreshIndicator(
-            onRefresh: _refresh,
+            onRefresh: () async => _fetchAllTime(),
             color: AppColors.primary,
             child: CustomScrollView(
               slivers: [
@@ -84,16 +117,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   child: _AdminHeader(
                     name: name,
                     onLogout: _handleLogout,
-                    onRefresh: _refresh,
+                    onRefresh: _fetchAllTime,
                   ),
                 ),
-        
+
                 // ── Error banner ─────────────────────────────────────────
                 if (admin.error != null)
                   SliverToBoxAdapter(
-                    child: _ErrorBanner(message: admin.error!, onRetry: _refresh),
+                    child: _ErrorBanner(
+                        message: admin.error!, onRetry: _fetchAllTime),
                   ),
-        
+
                 // ── Stats grid ───────────────────────────────────────────
                 SliverToBoxAdapter(
                   child: Padding(
@@ -103,8 +137,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         : _StatsGrid(stats: admin.stats),
                   ),
                 ),
-        
-                // ── Section title ────────────────────────────────────────
+
+                // ── Quick Actions title ──────────────────────────────────
                 const SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(20, 8, 20, 12),
@@ -118,7 +152,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                   ),
                 ),
-        
+
                 // ── Action cards ─────────────────────────────────────────
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -132,8 +166,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const ManageServicesScreen(),
-                          ),
+                              builder: (_) =>
+                                  const ManageServicesScreen()),
                         ),
                       ),
                       _ActionCard(
@@ -144,8 +178,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const ManageSlotsScreen(),
-                          ),
+                              builder: (_) =>
+                                  const ManageSlotsScreen()),
                         ),
                       ),
                       _ActionCard(
@@ -156,8 +190,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const ManageBookingsScreen(),
-                          ),
+                              builder: (_) =>
+                                  const ManageBookingsScreen()),
                         ),
                       ),
                       _ActionCard(
@@ -165,10 +199,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         label: 'Analytics',
                         subtitle: 'Revenue · Trends',
                         color: const Color(0xFF06D6A0),
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BulkSlotScreen()))
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const AnalyticsScreen()),
+                        ),
                       ),
                     ]),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
@@ -176,7 +215,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                   ),
                 ),
-        
+
                 // ── Popular services ──────────────────────────────────────
                 if (admin.stats?.popularServices.isNotEmpty == true) ...[
                   const SliverToBoxAdapter(
@@ -193,22 +232,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                   ),
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    padding:
+                        const EdgeInsets.fromLTRB(16, 0, 16, 24),
                     sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate((ctx, i) {
-                        final svc = admin.stats!.popularServices[i];
-                        return _PopularServiceTile(
-                          rank: i + 1,
-                          name: svc['name'] as String,
-                          count: (svc['booking_count'] as int?) ?? 0,
-                          isTop: i == 0,
-                        );
-                      }, childCount: admin.stats!.popularServices.length),
+                      delegate: SliverChildBuilderDelegate(
+                        (ctx, i) {
+                          final svc =
+                              admin.stats!.popularServices[i];
+                          return _PopularServiceTile(
+                            rank: i + 1,
+                            name: svc['name'] as String,
+                            count:
+                                (svc['booking_count'] as int?) ?? 0,
+                            isTop: i == 0,
+                          );
+                        },
+                        childCount:
+                            admin.stats!.popularServices.length,
+                      ),
                     ),
                   ),
                 ],
-        
-                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                const SliverToBoxAdapter(
+                    child: SizedBox(height: 16)),
               ],
             ),
           ),
@@ -247,14 +294,13 @@ class _AdminHeader extends StatelessWidget {
         children: [
           Row(
             children: [
-              // Avatar
               Container(
-                width: 44,
-                height: 44,
+                width: 44, height: 44,
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.2),
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.primary, width: 2),
+                  border: Border.all(
+                      color: AppColors.primary, width: 2),
                 ),
                 child: const Icon(
                   Icons.admin_panel_settings_rounded,
@@ -285,37 +331,35 @@ class _AdminHeader extends StatelessWidget {
                   ],
                 ),
               ),
-              // Refresh
               IconButton(
                 onPressed: onRefresh,
-                icon: const Icon(Icons.refresh_rounded, color: Colors.white70),
+                icon: const Icon(Icons.refresh_rounded,
+                    color: Colors.white70),
                 tooltip: 'Refresh',
               ),
-              // Logout
               IconButton(
                 onPressed: onLogout,
-                icon: const Icon(Icons.logout_rounded, color: Colors.white70),
+                icon: const Icon(Icons.logout_rounded,
+                    color: Colors.white70),
                 tooltip: 'Log out',
               ),
             ],
           ),
           const SizedBox(height: 20),
-          // Admin badge
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.primary.withOpacity(0.15),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.primary.withOpacity(0.4)),
+              border: Border.all(
+                  color: AppColors.primary.withOpacity(0.4)),
             ),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.verified_rounded,
-                  color: AppColors.primary,
-                  size: 14,
-                ),
+                Icon(Icons.verified_rounded,
+                    color: AppColors.primary, size: 14),
                 SizedBox(width: 4),
                 Text(
                   'Admin Panel',
@@ -353,7 +397,6 @@ class _StatsGrid extends StatelessWidget {
                 value: '${stats?.todayBookings ?? 0}',
                 icon: Icons.today_rounded,
                 color: const Color(0xFF6C63FF),
-                trend: null,
               ),
             ),
             const SizedBox(width: 12),
@@ -363,7 +406,6 @@ class _StatsGrid extends StatelessWidget {
                 value: '${stats?.pendingBookings ?? 0}',
                 icon: Icons.pending_actions_rounded,
                 color: const Color(0xFFFFB347),
-                trend: null,
               ),
             ),
           ],
@@ -377,7 +419,6 @@ class _StatsGrid extends StatelessWidget {
                 value: '${stats?.totalBookings ?? 0}',
                 icon: Icons.book_online_rounded,
                 color: const Color(0xFF00B4D8),
-                trend: null,
               ),
             ),
             const SizedBox(width: 12),
@@ -389,7 +430,6 @@ class _StatsGrid extends StatelessWidget {
                     : '\$0',
                 icon: Icons.attach_money_rounded,
                 color: const Color(0xFF06D6A0),
-                trend: null,
               ),
             ),
           ],
@@ -400,18 +440,15 @@ class _StatsGrid extends StatelessWidget {
 }
 
 class _StatCard extends StatelessWidget {
-  final String label;
-  final String value;
+  final String   label, value;
   final IconData icon;
-  final Color color;
-  final String? trend;
+  final Color    color;
 
   const _StatCard({
     required this.label,
     required this.value,
     required this.icon,
     required this.color,
-    this.trend,
   });
 
   @override
@@ -443,25 +480,6 @@ class _StatCard extends StatelessWidget {
                 ),
                 child: Icon(icon, color: color, size: 18),
               ),
-              if (trend != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    trend!,
-                    style: const TextStyle(
-                      color: AppColors.success,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
             ],
           ),
           const SizedBox(height: 12),
@@ -518,21 +536,20 @@ class _StatsShimmer extends StatelessWidget {
   }
 
   Widget _shimmerBox() => Container(
-    height: 100,
-    decoration: BoxDecoration(
-      color: Colors.grey[200],
-      borderRadius: BorderRadius.circular(16),
-    ),
-  );
+        height: 100,
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(16),
+        ),
+      );
 }
 
 // ── Action Card ───────────────────────────────────────────────────────────────
 
 class _ActionCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String subtitle;
-  final Color color;
+  final IconData     icon;
+  final String       label, subtitle;
+  final Color        color;
   final VoidCallback onTap;
 
   const _ActionCard({
@@ -561,13 +578,10 @@ class _ActionCard extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            // Background accent circle
             Positioned(
-              right: -12,
-              top: -12,
+              right: -12, top: -12,
               child: Container(
-                width: 70,
-                height: 70,
+                width: 70, height: 70,
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.08),
                   shape: BoxShape.circle,
@@ -589,19 +603,15 @@ class _ActionCard extends StatelessWidget {
                     child: Icon(icon, color: color, size: 20),
                   ),
                   const SizedBox(height: 10),
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF1A1A2E),
-                    ),
-                  ),
+                  Text(label,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1A1A2E))),
                   const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-                  ),
+                  Text(subtitle,
+                      style: TextStyle(
+                          fontSize: 11, color: Colors.grey[500])),
                 ],
               ),
             ),
@@ -615,10 +625,9 @@ class _ActionCard extends StatelessWidget {
 // ── Popular Service Tile ──────────────────────────────────────────────────────
 
 class _PopularServiceTile extends StatelessWidget {
-  final int rank;
+  final int    rank, count;
   final String name;
-  final int count;
-  final bool isTop;
+  final bool   isTop;
 
   const _PopularServiceTile({
     required this.rank,
@@ -631,12 +640,15 @@ class _PopularServiceTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: isTop
-            ? Border.all(color: AppColors.primary.withOpacity(0.3), width: 1.5)
+            ? Border.all(
+                color: AppColors.primary.withOpacity(0.3),
+                width: 1.5)
             : null,
         boxShadow: [
           BoxShadow(
@@ -648,10 +660,8 @@ class _PopularServiceTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Rank badge
           Container(
-            width: 32,
-            height: 32,
+            width: 32, height: 32,
             decoration: BoxDecoration(
               color: isTop
                   ? AppColors.primary
@@ -662,7 +672,9 @@ class _PopularServiceTile extends StatelessWidget {
               child: Text(
                 '$rank',
                 style: TextStyle(
-                  color: isTop ? Colors.white : const Color(0xFF6C63FF),
+                  color: isTop
+                      ? Colors.white
+                      : const Color(0xFF6C63FF),
                   fontWeight: FontWeight.w800,
                   fontSize: 13,
                 ),
@@ -674,14 +686,14 @@ class _PopularServiceTile extends StatelessWidget {
             child: Text(
               name,
               style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                color: Color(0xFF1A1A2E),
-              ),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: Color(0xFF1A1A2E)),
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.primary.withOpacity(0.08),
               borderRadius: BorderRadius.circular(20),
@@ -689,10 +701,9 @@ class _PopularServiceTile extends StatelessWidget {
             child: Text(
               '$count bookings',
               style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
+                  fontSize: 12,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -704,40 +715,40 @@ class _PopularServiceTile extends StatelessWidget {
 // ── Error Banner ──────────────────────────────────────────────────────────────
 
 class _ErrorBanner extends StatelessWidget {
-  final String message;
+  final String       message;
   final VoidCallback onRetry;
 
-  const _ErrorBanner({required this.message, required this.onRetry});
+  const _ErrorBanner(
+      {required this.message, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.error.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.error.withOpacity(0.3)),
+        border:
+            Border.all(color: AppColors.error.withOpacity(0.3)),
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.error_outline_rounded,
-            color: AppColors.error,
-            size: 18,
-          ),
+          const Icon(Icons.error_outline_rounded,
+              color: AppColors.error, size: 18),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(color: AppColors.error, fontSize: 13),
-            ),
+            child: Text(message,
+                style: const TextStyle(
+                    color: AppColors.error, fontSize: 13)),
           ),
           TextButton(
             onPressed: onRetry,
             style: TextButton.styleFrom(
               foregroundColor: AppColors.error,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8),
             ),
             child: const Text('Retry'),
           ),

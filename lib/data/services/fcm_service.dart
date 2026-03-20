@@ -1,6 +1,10 @@
+// lib/data/services/fcm_service.dart
+
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter/foundation.dart';
+import 'package:slotwise/features/admin/manage_bookings_screen.dart';
+import 'package:slotwise/main.dart'; // for navigatorKey
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -21,20 +25,16 @@ class FCMService {
   static const _channelDesc = 'Notifications for booking events';
 
   Future<void> initialize() async {
-    // Register background handler
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-    // Request permission from the user
-    final settings = await _messaging.requestPermission(
+    await _messaging.requestPermission(
       alert: true,
       badge: true,
       sound: true,
       provisional: false,
     );
-    debugPrint('FCM auth status: ${settings.authorizationStatus}');
 
-    // ── Local notifications setup ──────────────────────────────
-    // Use the unified initialize() call — works for both Android and iOS
+    // ── Local notifications setup ──────────────────────────
     await _localNotifications.initialize(
       const InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
@@ -45,11 +45,12 @@ class FCMService {
         ),
       ),
       onDidReceiveNotificationResponse: (NotificationResponse r) {
-        debugPrint('Notification tapped: ${r.payload}');
+        debugPrint('Local notification tapped: ${r.payload}');
+        // Local notifications carry the booking_id as the payload string
+        _navigateFromPayload(r.payload);
       },
     );
 
-    // Create the Android notification channel
     await _localNotifications
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
@@ -62,38 +63,74 @@ class FCMService {
           ),
         );
 
-    // ── FCM message listeners ──────────────────────────────────
-
-    // Foreground messages — show a local notification
+    // ── Foreground FCM: show local notification ────────────
     FirebaseMessaging.onMessage.listen((msg) {
       final n = msg.notification;
       if (n != null) {
         showLocalNotification(
           id: msg.hashCode,
           title: n.title ?? 'New Notification',
-          body: n.body ?? '',
-          payload: msg.data['type'],
+          body:  n.body  ?? '',
+          // Pass booking_id as payload so tapping the local
+          // notification also navigates correctly
+          payload: msg.data['booking_id'],
         );
       }
     });
 
-    // App opened by tapping a background notification
+    // ── Background → foreground (app was running) ──────────
     FirebaseMessaging.onMessageOpenedApp.listen((msg) {
-      debugPrint('Opened from background: type=${msg.data['type']}');
+      debugPrint('Push tapped (background): ${msg.data}');
+      _navigateFromMessage(msg);
     });
 
-    // App opened from a terminated state
+    // ── Terminated → opened (app was killed) ──────────────
     final initial = await _messaging.getInitialMessage();
     if (initial != null) {
-      debugPrint('Opened from terminated: type=${initial.data['type']}');
+      debugPrint('Push tapped (terminated): ${initial.data}');
+      // Delay slightly so the navigator is mounted before we push
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _navigateFromMessage(initial);
+      });
     }
   }
 
+  // ── Navigation helpers ─────────────────────────────────────
+
+  /// Navigate based on a full FCM RemoteMessage (has typed data map).
+  void _navigateFromMessage(RemoteMessage msg) {
+    final type      = msg.data['type'] as String?;
+    final bookingId = int.tryParse(msg.data['booking_id'] ?? '');
+
+    if (type == 'new_booking' && bookingId != null) {
+      _pushManageBookings(bookingId);
+    }
+  }
+
+  /// Navigate based on a raw payload string (from local notification tap).
+  void _navigateFromPayload(String? payload) {
+    final bookingId = int.tryParse(payload ?? '');
+    if (bookingId != null) {
+      _pushManageBookings(bookingId);
+    }
+  }
+
+  /// Actually push ManageBookingsScreen via the global navigator key.
+  void _pushManageBookings(int bookingId) {
+    navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (_) => ManageBookingsScreen(highlightBookingId: bookingId),
+      ),
+    );
+  }
+
+  // ── Public helpers ─────────────────────────────────────────
+
   Future<void> showLocalNotification({
-    required int id,
+    required int    id,
     required String title,
     required String body,
-    String? payload,
+    String?         payload,
   }) async {
     await _localNotifications.show(
       id,
@@ -105,8 +142,8 @@ class FCMService {
           _channelName,
           channelDescription: _channelDesc,
           importance: Importance.high,
-          priority: Priority.high,
-          showWhen: true,
+          priority:   Priority.high,
+          showWhen:   true,
         ),
         iOS: DarwinNotificationDetails(
           presentAlert: true,
@@ -114,7 +151,7 @@ class FCMService {
           presentSound: true,
         ),
       ),
-      payload: payload,
+      payload: payload,  // booking_id string
     );
   }
 
@@ -129,8 +166,6 @@ class FCMService {
     }
   }
 
-  /// Calls [onToken] immediately with the current token,
-  /// then again whenever the token refreshes.
   Future<void> saveTokenToBackend(void Function(String) onToken) async {
     final token = await getToken();
     if (token != null) onToken(token);

@@ -1,44 +1,65 @@
 // lib/providers/admin_provider.dart
 // State management for all admin operations.
-// Holds dashboard stats, all bookings list, and exposes
-// methods for fetching and mutating admin data.
+// Holds dashboard stats, all bookings list, and exposes methods for fetching and mutating admin data.
 
 import 'package:flutter/foundation.dart';
 import '../data/services/api_service.dart';
 import '../core/constants/api_constants.dart';
 
-// ── AdminStats model ──────────────────────────────────────────
+// ── AdminStats ────────────────────────────────────────────────
 
 class AdminStats {
   final int todayBookings;
   final int totalBookings;
-  final double totalRevenue;
-  final int activeServices;
   final int pendingBookings;
+  final int confirmedBookings;
+  final int cancelledBookings;
+  final double totalRevenue; // confirmed + completed only (from backend)
+  final double
+  pendingRevenue; // actual sum of pending booking prices (from backend)
+  final int activeServices;
   final List<Map<String, dynamic>> popularServices;
 
   AdminStats({
     required this.todayBookings,
     required this.totalBookings,
-    required this.totalRevenue,
-    required this.activeServices,
     required this.pendingBookings,
+    required this.confirmedBookings,
+    required this.cancelledBookings,
+    required this.totalRevenue,
+    required this.pendingRevenue,
+    required this.activeServices,
     required this.popularServices,
   });
+
+  // ── Derived values ────────────────────────────────────────────
+
+  /// Confirmed revenue = totalRevenue (backend already scopes this)
+  double get confirmedRevenue => totalRevenue;
+
+  /// Projected = confirmed + pending (best-case if all pending confirm)
+  double get projectedRevenue => totalRevenue + pendingRevenue;
+
+  /// Avg revenue per confirmed booking
+  double get avgRevenuePerBooking =>
+      confirmedBookings > 0 ? totalRevenue / confirmedBookings : 0.0;
 
   factory AdminStats.fromJson(Map<String, dynamic> j) => AdminStats(
     todayBookings: j['todayBookings'] ?? 0,
     totalBookings: j['totalBookings'] ?? 0,
-    totalRevenue: double.parse((j['totalRevenue'] ?? 0).toString()),
-    activeServices: j['activeServices'] ?? 0,
     pendingBookings: j['pendingBookings'] ?? 0,
+    confirmedBookings: j['confirmedBookings'] ?? 0,
+    cancelledBookings: j['cancelledBookings'] ?? 0,
+    totalRevenue: double.parse((j['totalRevenue'] ?? 0).toString()),
+    pendingRevenue: double.parse((j['pendingRevenue'] ?? 0).toString()),
+    activeServices: j['activeServices'] ?? 0,
     popularServices: List<Map<String, dynamic>>.from(
       j['popularServices'] ?? [],
     ),
   );
 }
 
-// ── AdminBooking model ────────────────────────────────────────
+// ── AdminBooking ──────────────────────────────────────────────
 
 class AdminBooking {
   final int id;
@@ -78,9 +99,9 @@ class AdminBooking {
     notes: j['notes'],
   );
 
-  AdminBooking copyWithStatus(String newStatus) => AdminBooking(
+  AdminBooking copyWithStatus(String s) => AdminBooking(
     id: id,
-    status: newStatus,
+    status: s,
     customerName: customerName,
     customerEmail: customerEmail,
     serviceName: serviceName,
@@ -112,16 +133,28 @@ class AdminProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  String _pad(int n) => n.toString().padLeft(2, '0');
+
   // ── Stats ──────────────────────────────────────────────────
 
-  Future<void> fetchStats() async {
+  Future<void> fetchStats({DateTime? startDate, DateTime? endDate}) async {
     await Future.microtask(() {
       _isLoading = true;
       _error = null;
       notifyListeners();
     });
     try {
-      final res = await _apiService.get(ApiConstants.adminStats);
+      final params = <String, dynamic>{};
+      if (startDate != null && endDate != null) {
+        params['start_date'] =
+            '${startDate.year}-${_pad(startDate.month)}-${_pad(startDate.day)}';
+        params['end_date'] =
+            '${endDate.year}-${_pad(endDate.month)}-${_pad(endDate.day)}';
+      }
+      final res = await _apiService.get(
+        ApiConstants.adminStats,
+        queryParameters: params.isEmpty ? null : params,
+      );
       _stats = AdminStats.fromJson(res.data['data']);
     } catch (e) {
       _error = e.toString();
@@ -143,10 +176,9 @@ class AdminProvider with ChangeNotifier {
         ApiConstants.adminBookings,
         queryParameters: {
           if (status != null && status != 'all') 'status': status,
-          if (date != null) 'date': date,
+          'date': ?date,
         },
       );
-      // Matches { success: true, data: { bookings: [...] } }
       _bookings = (res.data['data']['bookings'] as List)
           .map((b) => AdminBooking.fromJson(b))
           .toList();
@@ -157,7 +189,7 @@ class AdminProvider with ChangeNotifier {
     }
   }
 
-  // ── Bulk slot creation ─────────────────────────────────────
+  // ── Bulk slots ─────────────────────────────────────────────
 
   Future<void> bulkCreateSlots(List<Map<String, dynamic>> slots) async {
     _isLoading = true;
@@ -180,26 +212,18 @@ class AdminProvider with ChangeNotifier {
 
   // ── Update booking status ──────────────────────────────────
 
-  /// Calls PUT /api/admin/bookings/:id/status
-  /// The backend (bookingController) handles sending the push notification
-  /// to the user automatically — nothing extra needed here.
   Future<bool> updateBookingStatus(int bookingId, String status) async {
     try {
       await _apiService.put(
         ApiConstants.adminUpdateBookingStatus(bookingId),
         data: {'status': status},
       );
-
-      // Optimistic local update so the UI reflects the change instantly
       final idx = _bookings.indexWhere((b) => b.id == bookingId);
       if (idx != -1) {
         _bookings[idx] = _bookings[idx].copyWithStatus(status);
         notifyListeners();
       }
-
-      // Re-fetch stats so revenue and pending count stay accurate
       fetchStats();
-
       return true;
     } catch (e) {
       _error = e.toString();
@@ -207,8 +231,6 @@ class AdminProvider with ChangeNotifier {
       return false;
     }
   }
-
-  // ── Helpers ────────────────────────────────────────────────
 
   void clearError() {
     _error = null;

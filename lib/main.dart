@@ -14,12 +14,21 @@ import 'providers/booking_provider.dart';
 import 'providers/admin_provider.dart';
 import 'features/splash/splash_screen.dart';
 
+/// Global navigator key — lets FCMService navigate without a BuildContext.
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+/// Global route observer — lets AdminDashboardScreen detect when it
+/// becomes visible again after a child route (e.g. AnalyticsScreen) pops,
+/// so it can re-fetch all-time stats.
+final RouteObserver<ModalRoute<void>> routeObserver =
+    RouteObserver<ModalRoute<void>>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform);
   await FCMService().initialize();
 
-  // Load saved theme preference before the first frame
   final themeProvider = ThemeProvider();
   await themeProvider.loadFromPrefs();
 
@@ -45,9 +54,11 @@ class MyApp extends StatelessWidget {
         builder: (_, theme, __) => MaterialApp(
           title: 'SlotWise',
           debugShowCheckedModeBanner: false,
-          theme:      AppTheme.lightTheme,
-          darkTheme:  AppTheme.darkTheme,
-          themeMode:  theme.themeMode,   // switches live when toggled
+          navigatorKey: navigatorKey,
+          navigatorObservers: [routeObserver], // ← added
+          theme:     AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: theme.themeMode,
           home: const SplashScreen(),
         ),
       ),

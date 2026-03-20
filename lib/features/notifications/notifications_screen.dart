@@ -1,4 +1,5 @@
 // lib/features/notifications/notifications_screen.dart
+// User-only screen. No admin logic here.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -43,97 +44,101 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       appBar: AppBar(
         title: const Text('Notifications'),
         actions: [
-          Builder(builder: (ctx) {
-            final unread =
-                ctx.watch<NotificationProvider>().unreadCount;
-            if (unread == 0) return const SizedBox.shrink();
-            return TextButton.icon(
-              onPressed: _markAllRead,
-              icon: const Icon(Icons.done_all,
-                  color: Colors.white, size: 18),
-              label: const Text('Mark all read',
-                  style: TextStyle(color: Colors.white, fontSize: 12)),
-            );
-          }),
-        ],
-      ),
-      body: Builder(builder: (ctx) {
-        final provider = ctx.watch<NotificationProvider>();
-
-        if (provider.isLoading && provider.notifications.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (provider.error != null && provider.notifications.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline,
-                    size: 48, color: AppColors.error),
-                const SizedBox(height: 12),
-                Text(provider.error!,
-                    style: const TextStyle(
-                        color: AppColors.textSecondary),
-                    textAlign: TextAlign.center),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () => ctx
-                      .read<NotificationProvider>()
-                      .fetchNotifications(),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
+          Consumer<NotificationProvider>(
+            builder: (_, notif, _) {
+              if (notif.unreadCount == 0) return const SizedBox.shrink();
+              return TextButton.icon(
+                onPressed: _markAllRead,
+                icon: const Icon(Icons.done_all,
+                    color: Colors.white, size: 18),
+                label: const Text(
+                  'Mark all read',
+                  style: TextStyle(color: Colors.white, fontSize: 12),
                 ),
-              ],
-            ),
-          );
-        }
-
-        if (provider.notifications.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.notifications_none_outlined,
-                    size: 72, color: Colors.grey[400]),
-                const SizedBox(height: 16),
-                Text('No notifications yet',
-                    style: TextStyle(
-                        fontSize: 18, color: Colors.grey[600])),
-                const SizedBox(height: 8),
-                Text('Booking updates will appear here',
-                    style: TextStyle(
-                        fontSize: 14, color: Colors.grey[500])),
-              ],
-            ),
-          );
-        }
-
-        return RefreshIndicator(
-          onRefresh: () =>
-              ctx.read<NotificationProvider>().fetchNotifications(),
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            itemCount: provider.notifications.length,
-            separatorBuilder: (_, _) =>
-                const Divider(height: 1, indent: 72),
-            itemBuilder: (_, i) {
-              final n = provider.notifications[i];
-              return _NotificationTile(
-                notification: n,
-                isDark: isDark,
-                onTap: () {
-                  if (!n.isRead) {
-                    ctx
-                        .read<NotificationProvider>()
-                        .markAsRead(n.id);
-                  }
-                },
               );
             },
           ),
-        );
-      }),
+        ],
+      ),
+      body: Consumer<NotificationProvider>(
+        builder: (ctx, provider, _) {
+          if (provider.isLoading && provider.notifications.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (provider.error != null && provider.notifications.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline,
+                      size: 48, color: AppColors.error),
+                  const SizedBox(height: 12),
+                  Text(provider.error!,
+                      style: const TextStyle(
+                          color: AppColors.textSecondary),
+                      textAlign: TextAlign.center),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () => ctx
+                        .read<NotificationProvider>()
+                        .fetchNotifications(),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          if (provider.notifications.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.notifications_none_outlined,
+                      size: 72, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text('No notifications yet',
+                      style: TextStyle(
+                          fontSize: 18, color: Colors.grey[600])),
+                  const SizedBox(height: 8),
+                  Text('Booking updates will appear here',
+                      style: TextStyle(
+                          fontSize: 14, color: Colors.grey[500])),
+                ],
+              ),
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: () =>
+                ctx.read<NotificationProvider>().fetchNotifications(),
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              itemCount: provider.notifications.length,
+              separatorBuilder: (_, _) =>
+                  const Divider(height: 1, indent: 72),
+              itemBuilder: (_, i) {
+                final n = provider.notifications[i];
+                return _NotificationTile(
+                  notification: n,
+                  isDark: isDark,
+                  onTap: () {
+                    // Simply mark as read — no navigation needed.
+                    // The user can see booking details via My Bookings.
+                    if (!n.isRead) {
+                      ctx
+                          .read<NotificationProvider>()
+                          .markAsRead(n.id);
+                    }
+                  },
+                );
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -183,7 +188,6 @@ class _NotificationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUnread    = !notification.isRead;
-    // Unread highlight that works in both themes
     final bgColor     = isUnread
         ? AppColors.primary.withOpacity(isDark ? 0.12 : 0.05)
         : Colors.transparent;
@@ -194,14 +198,12 @@ class _NotificationTile extends StatelessWidget {
       onTap: onTap,
       child: Container(
         color: bgColor,
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 44, height: 44,
               decoration: BoxDecoration(
                 color: _iconColor.withOpacity(0.15),
                 shape: BoxShape.circle,
@@ -225,16 +227,16 @@ class _NotificationTile extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(_timeAgo(notification.createdAt),
-                      style:
-                          TextStyle(fontSize: 12, color: timeColor)),
+                  Text(
+                    _timeAgo(notification.createdAt),
+                    style: TextStyle(fontSize: 12, color: timeColor),
+                  ),
                 ],
               ),
             ),
             if (isUnread)
               Container(
-                width: 8,
-                height: 8,
+                width: 8, height: 8,
                 margin: const EdgeInsets.only(top: 4, left: 8),
                 decoration: const BoxDecoration(
                   color: AppColors.primary,

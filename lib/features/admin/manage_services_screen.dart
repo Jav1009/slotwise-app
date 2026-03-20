@@ -1,11 +1,12 @@
 // lib/features/admin/manage_services_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:slotwise/widgets/admin_theme_wrapper.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/service_model.dart';
 import '../../providers/service_provider.dart';
 import '../../core/utils/snackbar_utils.dart';
+import '../../widgets/admin_theme_wrapper.dart';
 
 class ManageServicesScreen extends StatefulWidget {
   const ManageServicesScreen({super.key});
@@ -20,8 +21,6 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Runs after the widget is fully in the tree and dependencies are ready.
-    // _fetched guard prevents repeated calls on every dependency change.
     if (!_fetched) {
       _fetched = true;
       context.read<ServiceProvider>().fetchServices();
@@ -29,13 +28,13 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
   }
 
   Future<void> _confirmDelete(ServiceModel service) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAdminDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Service?'),
         content: Text(
-          '"${service.name}" will be removed from the service list. '
-          'Existing bookings are unaffected.',
+          '"${service.name}" will be removed from the service '
+          'list. Existing bookings are unaffected.',
         ),
         actions: [
           TextButton(
@@ -51,11 +50,10 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
       ),
     );
 
-    if (!mounted) return;
-    if (confirmed != true) return;
+    if (!mounted || confirmed != true) return;
 
     final provider = context.read<ServiceProvider>();
-    final success  = await provider.deleteService(service.id);
+    final success = await provider.deleteService(service.id);
 
     if (!mounted) return;
     success
@@ -64,10 +62,9 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
   }
 
   void _openServiceForm({ServiceModel? service}) {
-    showModalBottomSheet(
+    showAdminBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => _ServiceFormSheet(existing: service),
     );
   }
@@ -87,59 +84,75 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
           onPressed: () => _openServiceForm(),
           backgroundColor: AppColors.primary,
           icon: const Icon(Icons.add, color: Colors.white),
-          label: const Text('Add Service',
-              style: TextStyle(color: Colors.white)),
+          label: const Text(
+            'Add Service',
+            style: TextStyle(color: Colors.white),
+          ),
         ),
-        body: RefreshIndicator(
-          onRefresh: () => context.read<ServiceProvider>().fetchServices(),
-          child: Builder(
-            builder: (context) {
-              final provider = context.watch<ServiceProvider>();
-              if (provider.isLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (provider.error != null) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline,
-                          size: 48, color: AppColors.error),
-                      const SizedBox(height: 12),
-                      Text(provider.error!,
-                          style: const TextStyle(color: AppColors.textSecondary),
-                          textAlign: TextAlign.center),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: () =>
-                            context.read<ServiceProvider>().fetchServices(),
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Retry'),
-                        style: ElevatedButton.styleFrom(
+        body: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: () => context.read<ServiceProvider>().fetchServices(),
+            child: Builder(
+              builder: (context) {
+                final provider = context.watch<ServiceProvider>();
+
+                if (provider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (provider.error != null) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: AppColors.error,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          provider.error!,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: () =>
+                              context.read<ServiceProvider>().fetchServices(),
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Retry'),
+                          style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white),
-                      ),
-                    ],
-                  ),
-                );
-              }
-              if (provider.services.isEmpty) {
-                return _EmptyState(onAdd: () => _openServiceForm());
-              }
-              return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
-                itemCount: provider.services.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 10),
-                itemBuilder: (ctx, i) {
-                  final svc = provider.services[i];
-                  return _ServiceTile(
-                    service:  svc,
-                    onEdit:   () => _openServiceForm(service: svc),
-                    onDelete: () => _confirmDelete(svc),
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
                   );
-                },
-              );
-            },
+                }
+
+                if (provider.services.isEmpty) {
+                  return _EmptyState(onAdd: () => _openServiceForm());
+                }
+
+                return ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+                  itemCount: provider.services.length,
+                  separatorBuilder: (_, i) => const SizedBox(height: 10),
+                  itemBuilder: (ctx, i) {
+                    final svc = provider.services[i];
+                    return _ServiceTile(
+                      service: svc,
+                      onEdit: () => _openServiceForm(service: svc),
+                      onDelete: () => _confirmDelete(svc),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -147,7 +160,7 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
   }
 }
 
-// ── Service Tile ──────────────────────────────────────────────
+// ── Service tile ──────────────────────────────────────────────
 
 class _ServiceTile extends StatelessWidget {
   final ServiceModel service;
@@ -169,7 +182,7 @@ class _ServiceTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -181,20 +194,26 @@ class _ServiceTile extends StatelessWidget {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.design_services_rounded,
-                color: AppColors.primary),
+            child: const Icon(
+              Icons.design_services_rounded,
+              color: AppColors.primary,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(service.name,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 15)),
+                Text(
+                  service.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
                 const SizedBox(height: 2),
                 Text(
                   '\$${service.price.toStringAsFixed(2)} · ${service.durationMinutes} min',
@@ -219,7 +238,7 @@ class _ServiceTile extends StatelessWidget {
   }
 }
 
-// ── Service Form Bottom Sheet ─────────────────────────────────
+// ── Service form bottom sheet ─────────────────────────────────
 
 class _ServiceFormSheet extends StatefulWidget {
   final ServiceModel? existing;
@@ -230,11 +249,11 @@ class _ServiceFormSheet extends StatefulWidget {
 }
 
 class _ServiceFormSheetState extends State<_ServiceFormSheet> {
-  final _formKey  = GlobalKey<FormState>();
-  final _nameCtr  = TextEditingController();
-  final _descCtr  = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final _nameCtr = TextEditingController();
+  final _descCtr = TextEditingController();
   final _priceCtr = TextEditingController();
-  final _durCtr   = TextEditingController();
+  final _durCtr = TextEditingController();
   bool _isLoading = false;
 
   bool get _isEditing => widget.existing != null;
@@ -243,11 +262,11 @@ class _ServiceFormSheetState extends State<_ServiceFormSheet> {
   void initState() {
     super.initState();
     if (_isEditing) {
-      final s      = widget.existing!;
-      _nameCtr.text  = s.name;
-      _descCtr.text  = s.description ?? '';
+      final s = widget.existing!;
+      _nameCtr.text = s.name;
+      _descCtr.text = s.description ?? '';
       _priceCtr.text = s.price.toString();
-      _durCtr.text   = s.durationMinutes.toString();
+      _durCtr.text = s.durationMinutes.toString();
     }
   }
 
@@ -265,14 +284,14 @@ class _ServiceFormSheetState extends State<_ServiceFormSheet> {
     setState(() => _isLoading = true);
 
     final data = {
-      'name':        _nameCtr.text.trim(),
+      'name': _nameCtr.text.trim(),
       'description': _descCtr.text.trim(),
-      'price':       double.parse(_priceCtr.text.trim()),
-      'duration':    int.parse(_durCtr.text.trim()),
+      'price': double.parse(_priceCtr.text.trim()),
+      'duration': int.parse(_durCtr.text.trim()),
     };
 
     final provider = context.read<ServiceProvider>();
-    final success  = _isEditing
+    final success = _isEditing
         ? await provider.updateService(widget.existing!.id, data)
         : await provider.createService(data);
 
@@ -282,18 +301,26 @@ class _ServiceFormSheetState extends State<_ServiceFormSheet> {
     if (success) {
       Navigator.pop(context);
       SnackbarUtils.showSuccess(
-          context, _isEditing ? 'Service updated' : 'Service created');
+        context,
+        _isEditing ? 'Service updated' : 'Service created',
+      );
     } else {
       SnackbarUtils.showError(
-          context, provider.error ?? 'Something went wrong');
+        context,
+        provider.error ?? 'Something went wrong',
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // keyboard height + system nav bar height
+    final bottomInset =
+        MediaQuery.of(context).viewInsets.bottom +
+        MediaQuery.of(context).padding.bottom;
+
     return Padding(
-      padding:
-          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(bottom: bottomInset),
       child: Container(
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
         decoration: const BoxDecoration(
@@ -308,7 +335,8 @@ class _ServiceFormSheetState extends State<_ServiceFormSheet> {
             children: [
               Center(
                 child: Container(
-                  width: 40, height: 4,
+                  width: 40,
+                  height: 4,
                   decoration: BoxDecoration(
                     color: Colors.grey[300],
                     borderRadius: BorderRadius.circular(2),
@@ -319,15 +347,18 @@ class _ServiceFormSheetState extends State<_ServiceFormSheet> {
               Text(
                 _isEditing ? 'Edit Service' : 'New Service',
                 style: const TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.bold),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 20),
 
               TextFormField(
                 controller: _nameCtr,
                 decoration: const InputDecoration(
-                    labelText: 'Service Name',
-                    border: OutlineInputBorder()),
+                  labelText: 'Service Name',
+                  border: OutlineInputBorder(),
+                ),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Name is required' : null,
               ),
@@ -336,8 +367,9 @@ class _ServiceFormSheetState extends State<_ServiceFormSheet> {
               TextFormField(
                 controller: _descCtr,
                 decoration: const InputDecoration(
-                    labelText: 'Description',
-                    border: OutlineInputBorder()),
+                  labelText: 'Description',
+                  border: OutlineInputBorder(),
+                ),
                 maxLines: 2,
                 validator: (v) => (v == null || v.trim().isEmpty)
                     ? 'Description is required'
@@ -351,13 +383,19 @@ class _ServiceFormSheetState extends State<_ServiceFormSheet> {
                     child: TextFormField(
                       controller: _priceCtr,
                       decoration: const InputDecoration(
-                          labelText: 'Price (\$)',
-                          border: OutlineInputBorder()),
+                        labelText: 'Price (\$)',
+                        border: OutlineInputBorder(),
+                      ),
                       keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true),
+                        decimal: true,
+                      ),
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Required';
-                        if (double.tryParse(v) == null) return 'Invalid';
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Required';
+                        }
+                        if (double.tryParse(v) == null) {
+                          return 'Invalid';
+                        }
                         return null;
                       },
                     ),
@@ -367,12 +405,17 @@ class _ServiceFormSheetState extends State<_ServiceFormSheet> {
                     child: TextFormField(
                       controller: _durCtr,
                       decoration: const InputDecoration(
-                          labelText: 'Duration (min)',
-                          border: OutlineInputBorder()),
+                        labelText: 'Duration (min)',
+                        border: OutlineInputBorder(),
+                      ),
                       keyboardType: TextInputType.number,
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Required';
-                        if (int.tryParse(v) == null) return 'Invalid';
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Required';
+                        }
+                        if (int.tryParse(v) == null) {
+                          return 'Invalid';
+                        }
                         return null;
                       },
                     ),
@@ -389,17 +432,24 @@ class _ServiceFormSheetState extends State<_ServiceFormSheet> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: _isLoading
                       ? const SizedBox(
-                          height: 20, width: 20,
+                          height: 20,
+                          width: 20,
                           child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2))
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
                       : Text(
                           _isEditing ? 'Save Changes' : 'Create Service',
                           style: const TextStyle(
-                              color: Colors.white, fontSize: 16),
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
                         ),
                 ),
               ),
@@ -411,7 +461,7 @@ class _ServiceFormSheetState extends State<_ServiceFormSheet> {
   }
 }
 
-// ── Empty State ───────────────────────────────────────────────
+// ── Empty state ───────────────────────────────────────────────
 
 class _EmptyState extends StatelessWidget {
   final VoidCallback onAdd;
@@ -423,19 +473,25 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.design_services_outlined,
-              size: 64, color: Colors.grey[400]),
+          Icon(
+            Icons.design_services_outlined,
+            size: 64,
+            color: Colors.grey[400],
+          ),
           const SizedBox(height: 12),
-          Text('No services yet.',
-              style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+          Text(
+            'No services yet.',
+            style: TextStyle(color: Colors.grey[600], fontSize: 16),
+          ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: onAdd,
             icon: const Icon(Icons.add),
             label: const Text('Add First Service'),
             style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white),
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
           ),
         ],
       ),
