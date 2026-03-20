@@ -281,3 +281,68 @@ exports.deleteSlot = async (req, res) => {
     });
   }
 };
+
+// Add this function to your existing controllers/slotController.js
+// Place it after the deleteSlot function
+
+/**
+ * Bulk create time slots (Admin only)
+ * POST /api/slots/bulk
+ * Body: { slots: [{ service_id, date, start_time, end_time, is_available }] }
+ */
+exports.bulkCreateSlots = async (req, res) => {
+  const { slots } = req.body;
+
+  if (!Array.isArray(slots) || slots.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'slots must be a non-empty array',
+    });
+  }
+
+  if (slots.length > 500) {
+    return res.status(400).json({
+      success: false,
+      message: 'Cannot create more than 500 slots in one request',
+    });
+  }
+
+  const adminId = req.user.id;
+  let created = 0;
+  let skipped = 0;
+  const errors = [];
+
+  for (const slot of slots) {
+    const { service_id, date, start_time, end_time } = slot;
+
+    if (!service_id || !date || !start_time || !end_time) {
+      skipped++;
+      errors.push(`Missing fields for slot ${date} ${start_time}`);
+      continue;
+    }
+
+    try {
+      await db.query(
+        `INSERT INTO time_slots (service_id, date, start_time, end_time, is_available, created_by)
+         VALUES (?, ?, ?, ?, TRUE, ?)`,
+        [service_id, date, start_time, end_time, adminId]
+      );
+      created++;
+    } catch (err) {
+      // ER_DUP_ENTRY = slot already exists for that service/date/time combo
+      if (err.code === 'ER_DUP_ENTRY') {
+        skipped++;
+      } else {
+        skipped++;
+        errors.push(`${date} ${start_time}: ${err.message}`);
+      }
+    }
+  }
+
+  res.status(201).json({
+    success: true,
+    message: `${created} slot(s) created, ${skipped} skipped`,
+    data: { created, skipped, errors },
+  });
+};
+
