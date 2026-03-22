@@ -55,13 +55,55 @@ class MyApp extends StatelessWidget {
           title: 'SlotWise',
           debugShowCheckedModeBanner: false,
           navigatorKey: navigatorKey,
-          navigatorObservers: [routeObserver], // ← added
+          navigatorObservers: [routeObserver],
           theme:     AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: theme.themeMode,
-          home: const SplashScreen(),
+          home: const _AppLifecycleWrapper(child: SplashScreen()),
         ),
       ),
     );
   }
+}
+
+// ── Lifecycle Wrapper ─────────────────────────────────────────
+// Listens for app resume events and forces a repaint of the
+// Flutter surface. This fixes the black screen that occurs on
+// Samsung devices (and other Android skins with aggressive
+// memory management) when returning from another app.
+
+class _AppLifecycleWrapper extends StatefulWidget {
+  final Widget child;
+  const _AppLifecycleWrapper({required this.child});
+
+  @override
+  State<_AppLifecycleWrapper> createState() => _AppLifecycleWrapperState();
+}
+
+class _AppLifecycleWrapperState extends State<_AppLifecycleWrapper>
+    with WidgetsBindingObserver {
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Force Flutter to reassert its rendering surface.
+      // This is the standard fix for post-background black screens.
+      WidgetsBinding.instance.reassembleApplication();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

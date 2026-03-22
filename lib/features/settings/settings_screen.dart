@@ -1,32 +1,139 @@
 // lib/features/settings/settings_screen.dart
 
+import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../core/constants/app_colors.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
   @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen>
+    with WidgetsBindingObserver {
+  bool _notificationsEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkNotificationPermission();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // Re-check permission when user returns from system settings
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkNotificationPermission();
+    }
+  }
+
+  Future<void> _checkNotificationPermission() async {
+    final status = await Permission.notification.status;
+    if (mounted) {
+      setState(() =>
+          _notificationsEnabled = status == PermissionStatus.granted);
+    }
+  }
+
+  Future<void> _toggleNotifications(bool value) async {
+    if (value) {
+      final status = await Permission.notification.request();
+      if (mounted) {
+        setState(() =>
+            _notificationsEnabled =
+                status == PermissionStatus.granted);
+        if (status == PermissionStatus.permanentlyDenied) {
+          _showOpenSettingsDialog();
+        }
+      }
+    } else {
+      _showOpenSettingsDialog();
+    }
+  }
+
+  void _showOpenSettingsDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Notification Settings'),
+        content: const Text(
+          'To change notification permissions, '
+          'please update them in your device settings.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              AppSettings.openAppSettings(
+                  type: AppSettingsType.notification);
+            },
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    Theme.of(context);
-    final isDark  = context.watch<ThemeProvider>().isDarkMode;
+    final isDark = context.watch<ThemeProvider>().isDarkMode;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         children: [
-          // ── Appearance section ───────────────────────────
+          // ── Notifications ──────────────────────────────
+          _SectionHeader(label: 'Notifications'),
+
+          _SettingsTile(
+            isDark: isDark,
+            icon: _notificationsEnabled
+                ? Icons.notifications_active_rounded
+                : Icons.notifications_off_rounded,
+            iconColor: _notificationsEnabled
+                ? AppColors.primary
+                : AppColors.textSecondary,
+            title: 'Push Notifications',
+            subtitle: _notificationsEnabled
+                ? 'Booking updates enabled'
+                : 'Tap to enable notifications',
+            trailing: Switch(
+              value: _notificationsEnabled,
+              onChanged: _toggleNotifications,
+            ),
+          ),
+
+          const Divider(indent: 16, endIndent: 16),
+
+          // ── Appearance ─────────────────────────────────
           _SectionHeader(label: 'Appearance'),
 
           _SettingsTile(
-            icon: isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
-            iconColor: isDark ? const Color(0xFF9C84FC) : AppColors.accent,
+            isDark: isDark,
+            icon: isDark
+                ? Icons.dark_mode_rounded
+                : Icons.light_mode_rounded,
+            iconColor:
+                isDark ? const Color(0xFF9C84FC) : AppColors.accent,
             title: 'Dark Mode',
-            subtitle: isDark ? 'Dark theme is on' : 'Light theme is on',
+            subtitle:
+                isDark ? 'Dark theme is on' : 'Light theme is on',
             trailing: Switch(
               value: isDark,
               onChanged: (_) =>
@@ -36,10 +143,11 @@ class SettingsScreen extends StatelessWidget {
 
           const Divider(indent: 16, endIndent: 16),
 
-          // ── About section ────────────────────────────────
+          // ── About ──────────────────────────────────────
           _SectionHeader(label: 'About'),
 
           _SettingsTile(
+            isDark: isDark,
             icon: Icons.info_outline_rounded,
             iconColor: AppColors.primary,
             title: 'App Version',
@@ -47,6 +155,7 @@ class SettingsScreen extends StatelessWidget {
           ),
 
           _SettingsTile(
+            isDark: isDark,
             icon: Icons.code_rounded,
             iconColor: AppColors.primary,
             title: 'Built with Flutter',
@@ -82,24 +191,24 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _SettingsTile extends StatelessWidget {
-  final IconData  icon;
-  final Color     iconColor;
-  final String    title;
-  final String    subtitle;
-  final Widget?   trailing;
+  final IconData icon;
+  final Color    iconColor;
+  final String   title;
+  final String   subtitle;
+  final Widget?  trailing;
+  final bool     isDark;
 
   const _SettingsTile({
     required this.icon,
     required this.iconColor,
     required this.title,
     required this.subtitle,
+    required this.isDark,
     this.trailing,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.watch<ThemeProvider>().isDarkMode;
-
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       decoration: BoxDecoration(
