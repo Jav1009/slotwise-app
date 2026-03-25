@@ -228,7 +228,9 @@ This project was developed as a capstone submission for CSC1002 — Mobile Appli
 ## Developers
 
 **Javaughn Douglas**
+
 **Raphiel Collins**
+
 **Daniel Moncrieffe**
 
 Amber Academy — Cohort 4, 2026
