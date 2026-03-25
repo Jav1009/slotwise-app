@@ -8,30 +8,38 @@ import '../../data/models/booking_model.dart';
 import 'booking_detail_screen.dart';
 
 class MyBookingsScreen extends StatefulWidget {
-  const MyBookingsScreen({super.key});
+  /// Optional tab to open on launch. 0 = Upcoming, 1 = Past.
+  /// Passed as a route argument by FCMService when a push notification
+  /// is tapped, so the user lands on the correct tab automatically.
+  final int initialTab;
+
+  const MyBookingsScreen({super.key, this.initialTab = 0});
 
   @override
   State<MyBookingsScreen> createState() => _MyBookingsScreenState();
 }
 
 class _MyBookingsScreenState extends State<MyBookingsScreen> {
-  // Simple integer — completely immune to Provider rebuilds
-  int _selectedIndex = 0;
+  late int _selectedIndex;
 
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialTab;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<BookingProvider>().fetchMyBookings();
+      // forceRefresh: true ensures we always fetch the latest status from
+      // the server when this screen is pushed — most important when the
+      // screen is opened via a push notification tap, where the booking
+      // status may have just changed (e.g. pending → confirmed).
+      context.read<BookingProvider>().fetchMyBookings(forceRefresh: true);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final appBarBg = isDark
-        ? const Color(0xFF1E1E1E)
-        : AppColors.primary;
+    final appBarBg = isDark ? const Color(0xFF1E1E1E) : AppColors.primary;
 
     return Scaffold(
       appBar: AppBar(
@@ -60,8 +68,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
           ),
         ),
       ),
-      // IndexedStack keeps both lists mounted so scroll position
-      // is preserved when switching tabs
       body: Consumer<BookingProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading && provider.bookings.isEmpty) {
@@ -73,13 +79,19 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline,
-                      size: 64, color: AppColors.error),
+                  const Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: AppColors.error,
+                  ),
                   const SizedBox(height: 16),
-                  const Text('Failed to load bookings',
-                      style: TextStyle(
-                          fontSize: 18,
-                          color: AppColors.textSecondary)),
+                  const Text(
+                    'Failed to load bookings',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: provider.fetchMyBookings,
@@ -147,9 +159,7 @@ class _TabButton extends StatelessWidget {
               label,
               style: TextStyle(
                 color: isSelected ? Colors.white : Colors.white60,
-                fontWeight: isSelected
-                    ? FontWeight.bold
-                    : FontWeight.normal,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 fontSize: 14,
               ),
             ),
@@ -180,18 +190,18 @@ class _BookingsList extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.event_busy,
-                size: 64,
-                color:
-                    isDark ? Colors.white38 : AppColors.textSecondary),
+            Icon(
+              Icons.event_busy,
+              size: 64,
+              color: isDark ? Colors.white38 : AppColors.textSecondary,
+            ),
             const SizedBox(height: 16),
             Text(
               'No bookings found',
               style: TextStyle(
-                  fontSize: 18,
-                  color: isDark
-                      ? Colors.white54
-                      : AppColors.textSecondary),
+                fontSize: 18,
+                color: isDark ? Colors.white54 : AppColors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -237,8 +247,7 @@ class _BookingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cardColor  = isDark ? const Color(0xFF2C2C2C) : Colors.white;
     final titleColor = isDark ? Colors.white : Colors.black87;
-    final metaColor  =
-        isDark ? Colors.white54 : AppColors.textSecondary;
+    final metaColor  = isDark ? Colors.white54 : AppColors.textSecondary;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -268,14 +277,17 @@ class _BookingCard extends StatelessWidget {
                     child: Text(
                       booking.serviceName,
                       style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: titleColor),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: titleColor,
+                      ),
                     ),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: booking.statusColor.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(8),
@@ -283,9 +295,10 @@ class _BookingCard extends StatelessWidget {
                     child: Text(
                       booking.statusText,
                       style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: booking.statusColor),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: booking.statusColor,
+                      ),
                     ),
                   ),
                 ],
@@ -293,32 +306,33 @@ class _BookingCard extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.calendar_today,
-                      size: 16, color: metaColor),
+                  Icon(Icons.calendar_today, size: 16, color: metaColor),
                   const SizedBox(width: 8),
-                  Text(booking.formattedDate,
-                      style: TextStyle(
-                          fontSize: 14, color: metaColor)),
+                  Text(
+                    booking.formattedDate,
+                    style: TextStyle(fontSize: 14, color: metaColor),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(Icons.access_time,
-                      size: 16, color: metaColor),
+                  Icon(Icons.access_time, size: 16, color: metaColor),
                   const SizedBox(width: 8),
-                  Text(booking.formattedTimeRange,
-                      style: TextStyle(
-                          fontSize: 14, color: metaColor)),
+                  Text(
+                    booking.formattedTimeRange,
+                    style: TextStyle(fontSize: 14, color: metaColor),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
               Text(
                 booking.formattedPrice,
                 style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
               ),
             ],
           ),

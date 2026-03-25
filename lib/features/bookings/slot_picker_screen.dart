@@ -50,7 +50,7 @@ class _SlotPickerScreenState extends State<SlotPickerScreen> {
 
     // Theme-aware colours
     final headerBg   = isDark ? const Color(0xFF1E1E1E) : AppColors.surface;
-    final cardBg     = isDark ? const Color(0xFF2C2C2C) : AppColors.background;
+    final _     = isDark ? const Color(0xFF2C2C2C) : AppColors.background;
     final dayText    = isDark ? Colors.white : Colors.black;
     final dateText   = isDark ? Colors.white70 : AppColors.textSecondary;
     final arrowBg    = isDark ? const Color(0xFF3A3A3A) : AppColors.background;

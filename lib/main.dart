@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:slotwise/data/services/fcm_service.dart';
+import 'package:slotwise/features/admin/manage_bookings_screen.dart';
+import 'package:slotwise/features/bookings/my_bookings_screen.dart';
 import 'package:slotwise/providers/notification_provider.dart';
 import 'package:slotwise/providers/theme_provider.dart';
 import 'firebase_options.dart';
@@ -18,15 +20,13 @@ import 'features/splash/splash_screen.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 /// Global route observer — lets AdminDashboardScreen detect when it
-/// becomes visible again after a child route (e.g. AnalyticsScreen) pops,
-/// so it can re-fetch all-time stats.
+/// becomes visible again after a child route pops.
 final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await FCMService().initialize();
 
   final themeProvider = ThemeProvider();
@@ -56,10 +56,23 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           navigatorKey: navigatorKey,
           navigatorObservers: [routeObserver],
-          theme:     AppTheme.lightTheme,
+          theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: theme.themeMode,
           home: const _AppLifecycleWrapper(child: SplashScreen()),
+          // ── Named routes used by FCMService for push-notification taps ──
+          routes: {
+            '/bookings': (ctx) {
+              final tab = ModalRoute.of(ctx)?.settings.arguments as int? ?? 0;
+              return MyBookingsScreen(initialTab: tab);
+            },
+            '/admin/bookings': (ctx) {
+              // The booking ID to highlight is passed as a route argument
+              // by FCMService._pushAdminBookings().
+              final id = ModalRoute.of(ctx)?.settings.arguments as int?;
+              return ManageBookingsScreen(highlightBookingId: id);
+            },
+          },
         ),
       ),
     );
@@ -67,10 +80,8 @@ class MyApp extends StatelessWidget {
 }
 
 // ── Lifecycle Wrapper ─────────────────────────────────────────
-// Listens for app resume events and forces a repaint of the
-// Flutter surface. This fixes the black screen that occurs on
-// Samsung devices (and other Android skins with aggressive
-// memory management) when returning from another app.
+// Fixes the black screen on Samsung/aggressive-memory-management
+// Android devices when returning from another app.
 
 class _AppLifecycleWrapper extends StatefulWidget {
   final Widget child;
@@ -82,7 +93,6 @@ class _AppLifecycleWrapper extends StatefulWidget {
 
 class _AppLifecycleWrapperState extends State<_AppLifecycleWrapper>
     with WidgetsBindingObserver {
-
   @override
   void initState() {
     super.initState();
@@ -98,8 +108,6 @@ class _AppLifecycleWrapperState extends State<_AppLifecycleWrapper>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // Force Flutter to reassert its rendering surface.
-      // This is the standard fix for post-background black screens.
       WidgetsBinding.instance.reassembleApplication();
     }
   }

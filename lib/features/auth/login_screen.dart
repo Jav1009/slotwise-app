@@ -10,7 +10,7 @@ import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_button.dart';
 import 'register_screen.dart';
 import '../dashboard/user_dashboard_screen.dart';
-import '../admin/admin_dashboard_screen.dart'; // ✅ FIXED: import added
+import '../admin/admin_dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -34,7 +34,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleLogin() async {
     context.read<AuthProvider>().clearError();
-
     if (!_formKey.currentState!.validate()) return;
 
     final success = await context.read<AuthProvider>().login(
@@ -46,7 +45,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (success) {
       final auth = context.read<AuthProvider>();
-      // ✅ FIXED: route based on role instead of always going to UserDashboardScreen
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => auth.isAdmin
@@ -67,72 +65,76 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 28),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 40),
+                const SizedBox(height: 52),
 
-                // Logo / App Name
+                // ── Logo ──────────────────────────────────────────
                 Center(
                   child: Column(
                     children: [
-                      Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          gradient: AppColors.primaryGradient,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.calendar_today,
-                          size: 50,
-                          color: Colors.white,
-                        ),
+                      Image.asset(
+                        'assets/icon/app_icon.png',
+                        width: 96,
+                        height: 96,
                       ),
                       const SizedBox(height: 16),
                       const Text(
                         'SlotWise',
                         style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 30,
+                          fontWeight: FontWeight.w800,
                           color: AppColors.primary,
+                          letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
+                      const SizedBox(height: 6),
+                      Text(
                         'Book your appointments easily',
                         style: TextStyle(
-                          fontSize: 16,
-                          color: AppColors.textSecondary,
+                          fontSize: 15,
+                          color: isDark
+                              ? Colors.white54
+                              : AppColors.textSecondary,
                         ),
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 48),
+                const SizedBox(height: 52),
 
-                const Text(
+                // ── Heading ───────────────────────────────────────
+                Text(
                   'Welcome back',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    letterSpacing: -0.3,
+                  ),
                 ),
-                const SizedBox(height: 8),
-                const Text(
+                const SizedBox(height: 4),
+                Text(
                   'Sign in to continue',
                   style: TextStyle(
-                    fontSize: 16,
-                    color: AppColors.textSecondary,
+                    fontSize: 15,
+                    color: isDark ? Colors.white54 : AppColors.textSecondary,
                   ),
                 ),
 
                 const SizedBox(height: 32),
 
+                // ── Fields ────────────────────────────────────────
                 CustomTextField(
                   controller: _emailController,
                   label: 'Email',
@@ -154,33 +156,39 @@ class _LoginScreenState extends State<LoginScreen> {
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
-                          ? Icons.visibility_off
-                          : Icons.visibility,
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                     ),
                     onPressed: () =>
                         setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
 
+                // ── Login button ──────────────────────────────────
                 Consumer<AuthProvider>(
-                  builder: (context, auth, _) => CustomButton(
+                  builder: (_, auth, __) => CustomButton(
                     text: 'Login',
                     isLoading: auth.isLoading,
                     onPressed: _handleLogin,
-                    icon: Icons.login,
+                    icon: Icons.login_rounded,
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
 
+                // ── Register link ─────────────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
+                    Text(
                       "Don't have an account? ",
-                      style: TextStyle(color: AppColors.textSecondary),
+                      style: TextStyle(
+                        color: isDark
+                            ? Colors.white54
+                            : AppColors.textSecondary,
+                      ),
                     ),
                     TextButton(
                       onPressed: () => Navigator.of(context).push(
@@ -188,13 +196,23 @@ class _LoginScreenState extends State<LoginScreen> {
                           builder: (_) => const RegisterScreen(),
                         ),
                       ),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
                       child: const Text(
                         'Register',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                   ],
                 ),
+
+                const SizedBox(height: 24),
               ],
             ),
           ),

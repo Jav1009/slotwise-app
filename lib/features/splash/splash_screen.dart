@@ -56,19 +56,7 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: const Icon(
-                Icons.calendar_today,
-                size: 60,
-                color: AppColors.primary,
-              ),
-            ),
+            Image.asset('assets/icon/app_icon.png', width: 120, height: 120),
             const SizedBox(height: 24),
             const Text(
               'SlotWise',

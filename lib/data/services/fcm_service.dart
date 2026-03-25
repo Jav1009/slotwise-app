@@ -3,8 +3,10 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:slotwise/features/admin/manage_bookings_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:slotwise/data/services/storage_service.dart';
 import 'package:slotwise/main.dart'; // for navigatorKey
+import 'package:slotwise/providers/booking_provider.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -46,7 +48,6 @@ class FCMService {
       ),
       onDidReceiveNotificationResponse: (NotificationResponse r) {
         debugPrint('Local notification tapped: ${r.payload}');
-        // Local notifications carry the booking_id as the payload string
         _navigateFromPayload(r.payload);
       },
     );
@@ -71,8 +72,6 @@ class FCMService {
           id: msg.hashCode,
           title: n.title ?? 'New Notification',
           body:  n.body  ?? '',
-          // Pass booking_id as payload so tapping the local
-          // notification also navigates correctly
           payload: msg.data['booking_id'],
         );
       }
@@ -88,7 +87,6 @@ class FCMService {
     final initial = await _messaging.getInitialMessage();
     if (initial != null) {
       debugPrint('Push tapped (terminated): ${initial.data}');
-      // Delay slightly so the navigator is mounted before we push
       Future.delayed(const Duration(milliseconds: 500), () {
         _navigateFromMessage(initial);
       });
@@ -97,30 +95,65 @@ class FCMService {
 
   // ── Navigation helpers ─────────────────────────────────────
 
-  /// Navigate based on a full FCM RemoteMessage (has typed data map).
-  void _navigateFromMessage(RemoteMessage msg) {
+  /// Determine the user's role from secure storage, then route accordingly.
+  Future<void> _navigateFromMessage(RemoteMessage msg) async {
     final type      = msg.data['type'] as String?;
     final bookingId = int.tryParse(msg.data['booking_id'] ?? '');
+    final status    = msg.data['status'] as String?;
 
-    if (type == 'new_booking' && bookingId != null) {
-      _pushManageBookings(bookingId);
+    if (bookingId == null) return;
+
+    final role = await StorageService.getUserRole();
+
+    if (role == 'admin' && type == 'new_booking') {
+      _pushAdminBookings(bookingId);
+    } else {
+      // Cancelled/completed bookings land on Past tab (index 1),
+      // everything else (confirmed, pending) on Upcoming (index 0).
+      final tabIndex = (status == 'cancelled' || status == 'completed') ? 1 : 0;
+      await _pushUserBookings(tabIndex);
     }
   }
 
-  /// Navigate based on a raw payload string (from local notification tap).
-  void _navigateFromPayload(String? payload) {
+  /// Navigate from a local-notification tap (payload = booking_id string).
+  Future<void> _navigateFromPayload(String? payload) async {
     final bookingId = int.tryParse(payload ?? '');
-    if (bookingId != null) {
-      _pushManageBookings(bookingId);
+    if (bookingId == null) return;
+
+    final role = await StorageService.getUserRole();
+
+    if (role == 'admin') {
+      _pushAdminBookings(bookingId);
+    } else {
+      // No status in a local-notification payload — default to Upcoming.
+      await _pushUserBookings(0);
     }
   }
 
-  /// Actually push ManageBookingsScreen via the global navigator key.
-  void _pushManageBookings(int bookingId) {
-    navigatorKey.currentState?.push(
-      MaterialPageRoute(
-        builder: (_) => ManageBookingsScreen(highlightBookingId: bookingId),
-      ),
+  // ── Concrete push helpers ──────────────────────────────────
+
+  void _pushAdminBookings(int bookingId) {
+    navigatorKey.currentState?.pushNamed(
+      '/admin/bookings',
+      arguments: bookingId,
+    );
+  }
+
+  /// Fires a forceRefresh on BookingProvider BEFORE pushing the route so
+  /// the fetch is already in-flight (or complete) by the time the screen
+  /// mounts.  This prevents the user seeing a stale "pending" status when
+  /// the booking has already been confirmed/cancelled by the admin.
+  Future<void> _pushUserBookings(int tabIndex) async {
+    final context = navigatorKey.currentContext;
+    if (context != null) {
+      // forceRefresh bypasses the in-flight guard so we always get fresh
+      // data on a notification tap, even if a fetch is already running.
+      context.read<BookingProvider>().fetchMyBookings(forceRefresh: true);
+    }
+
+    navigatorKey.currentState?.pushNamed(
+      '/bookings',
+      arguments: tabIndex,
     );
   }
 
@@ -151,7 +184,7 @@ class FCMService {
           presentSound: true,
         ),
       ),
-      payload: payload,  // booking_id string
+      payload: payload,
     );
   }
 

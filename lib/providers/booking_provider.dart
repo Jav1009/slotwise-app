@@ -15,10 +15,15 @@ class BookingProvider with ChangeNotifier {
   // ── State ──────────────────────────────────────────────────
   List<BookingModel> _bookings      = [];
   List<SlotModel>   _availableSlots = [];
-  List<SlotModel>   _adminSlots     = []; // All slots for admin view
+  List<SlotModel>   _adminSlots     = [];
   SlotModel?        _selectedSlot;
   bool              _isLoading      = false;
   String?           _error;
+
+  // Tracks whether a fetchMyBookings call is already in-flight so a
+  // concurrent forceRefresh (from FCMService) does not fire a second
+  // identical request.
+  bool _fetchingMyBookings = false;
 
   // ── Getters ────────────────────────────────────────────────
   List<BookingModel> get bookings       => _bookings;
@@ -28,9 +33,9 @@ class BookingProvider with ChangeNotifier {
   bool               get isLoading      => _isLoading;
   String?            get error          => _error;
 
-  /// Upcoming = future date + not cancelled
+  /// Upcoming = future date + not cancelled/completed
   List<BookingModel> get upcomingBookings => _bookings
-      .where((b) => b.isFuture && b.status != 'cancelled')
+      .where((b) => b.isFuture && b.status != 'cancelled' && b.status != 'completed')
       .toList();
 
   /// Past = already happened OR cancelled/completed
@@ -49,8 +54,19 @@ class BookingProvider with ChangeNotifier {
   // USER BOOKING METHODS
   // ══════════════════════════════════════════════════════════
 
-  /// Fetch the current user's full booking history
-  Future<void> fetchMyBookings() async {
+  /// Fetch the current user's full booking history.
+  ///
+  /// [forceRefresh] — when true (used by FCMService on notification tap)
+  /// the call bypasses the in-flight guard so the freshest data is always
+  /// fetched before the screen is pushed.  A duplicate network request is
+  /// acceptable here because correctness matters more than saving one call.
+  Future<void> fetchMyBookings({bool forceRefresh = false}) async {
+    // If a fetch is already running and this isn't a forced refresh, bail
+    // out so we don't fire two identical requests at once.
+    if (_fetchingMyBookings && !forceRefresh) return;
+
+    _fetchingMyBookings = true;
+
     await Future.microtask(() {
       _isLoading = true;
       _error = null;
@@ -64,6 +80,7 @@ class BookingProvider with ChangeNotifier {
     } catch (e) {
       _error = e.toString();
     } finally {
+      _fetchingMyBookings = false;
       _setLoading(false);
     }
   }
@@ -126,7 +143,6 @@ class BookingProvider with ChangeNotifier {
           'notes':      notes,
         },
       );
-      // Refresh the bookings list so My Bookings screen is up to date
       await fetchMyBookings();
       return true;
     } catch (e) {
@@ -161,7 +177,6 @@ class BookingProvider with ChangeNotifier {
   // ══════════════════════════════════════════════════════════
 
   /// Fetch ALL slots for a given date (admin view — includes booked slots).
-  /// Uses GET /slots?date=YYYY-MM-DD
   Future<void> fetchAdminSlots({required String date}) async {
     await Future.microtask(() {
       _isLoading = true;
@@ -184,7 +199,6 @@ class BookingProvider with ChangeNotifier {
   }
 
   /// Create a new time slot (admin only).
-  /// Returns true on success, false on failure.
   Future<bool> createSlot({
     required int serviceId,
     required String date,
@@ -210,12 +224,10 @@ class BookingProvider with ChangeNotifier {
   }
 
   /// Delete a slot by id (admin only).
-  /// Backend rejects the request if the slot has any booking history.
   /// Removes the slot from local state immediately for a snappy UI.
   Future<bool> deleteSlot(int slotId) async {
     try {
       await _apiService.delete(ApiConstants.slotById(slotId));
-      // Optimistic local removal — no need to re-fetch the whole list
       _adminSlots.removeWhere((s) => s.id == slotId);
       notifyListeners();
       return true;
@@ -228,7 +240,6 @@ class BookingProvider with ChangeNotifier {
 
   // ── Shared helpers ─────────────────────────────────────────
 
-  /// Clears any stored error string
   void clearError() {
     _error = null;
     notifyListeners();
